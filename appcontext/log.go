@@ -15,9 +15,9 @@ var (
 
 func init() {
 	LogLevel = zap.DynamicLevel()
-	LogLevel.SetLevel(zap.DebugLevel)
+	LogLevel.SetLevel(zap.InfoLevel)
 	Logger = zap.New(
 		zap.NewTextEncoder(zap.TextTimeFormat(time.RFC3339)),
-		zap.DebugLevel,
+		LogLevel,
 	)
 }

@@ -17,12 +17,14 @@ import (
 type (
 	// Scraper contains all scraping data
 	Scraper struct {
+		MaxDepth uint
+		URL      *url.URL
+
 		browser *browser.Browser
 		log     zap.Logger
 
 		assets map[string]bool
 		pages  map[string]bool
-		URL    *url.URL
 	}
 )
 
@@ -117,6 +119,10 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) error {
 	}
 
 	s.pages[URL.Path] = false
+	if s.MaxDepth != 0 && currentDepth == s.MaxDepth {
+		return nil
+	}
+
 	return s.scrapeURL(URL, currentDepth+1)
 }
 
@@ -162,8 +168,11 @@ func (s *Scraper) getFilePath(URL *url.URL) string {
 
 func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {
 	dir := filepath.Dir(filePath)
-	fileDir := filepath.Join(".", s.URL.Host, dir)
-	err := os.MkdirAll(fileDir, os.ModePerm)
+	if len(dir) < len(s.URL.Host) { // nothing to append if it is the root dir
+		dir = filepath.Join(".", s.URL.Host, dir)
+	}
+	s.log.Debug("Creating dir", zap.String("Path", dir))
+	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		return err
 	}
