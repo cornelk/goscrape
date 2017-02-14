@@ -1,12 +1,14 @@
-goscrape is a web scraper built with Golang.
+# goscrape
 
-To install:
+A web scraper built with Golang.
+
+## Install:
 
 ```
 go install github.com/cornelk/goscrape
 ```
 
-Usage:
+## Usage:
 ```
 goscrape http://website
 ```
@@ -16,7 +18,7 @@ Advantages over existing tools like wget, httrack, Teleport Pro:
 * Available for all platforms that Golang supports
 * Excluding URLS will not fetch them (unlike [wget](http://savannah.gnu.org/bugs/?20808))
 
-Planned features:
+## Planned features:
 
 * Downsizing images
 * Excluding of files
