@@ -1,8 +1,8 @@
 package scraper
 
 import (
-	"net/url"
 	"io"
+	"net/url"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/uber-go/zap"
@@ -49,9 +49,12 @@ func (s *Scraper) fixQuerySelection(attribute string, selection *goquery.Selecti
 	refStr := refRes.String()
 
 	if refStr == "" {
-		refStr = "/"
+		refStr = "/" // website root
 	} else if refStr[0] == '/' {
 		refStr = refStr[1:]
+	}
+	if refStr[len(refStr)-1] == '/' {
+		refStr += "index.html"
 	}
 
 	s.log.Debug("HTML Element fixed", zap.Stringer("URL", refRes), zap.String("Fixed", refStr))
