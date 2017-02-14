@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"net/url"
 	"os"
-	"path/filepath"
 
 	"github.com/cornelk/goscrape/appcontext"
 
@@ -54,7 +53,7 @@ func (s *Scraper) Start() error {
 }
 
 func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
-	s.log.Debug("Downloading", zap.Stringer("URL", URL))
+	s.log.Info("Downloading", zap.Stringer("URL", URL))
 	err := s.browser.Open(URL.String())
 	if err != nil {
 		return err
@@ -71,6 +70,12 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 		return err
 	}
 
+	html, err := s.fixFileReferences(buf)
+	if err != nil {
+		return err
+	}
+
+	buf = bytes.NewBufferString(html)
 	err = s.writeFile(filePath, buf)
 	if err != nil {
 		return err
@@ -144,7 +149,7 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 		return nil
 	}
 
-	s.log.Debug("Downloading", zap.Stringer("URL", URL))
+	s.log.Info("Downloading", zap.Stringer("URL", URL))
 
 	buf := &bytes.Buffer{}
 	_, err := asset.Download(buf)
@@ -153,40 +158,4 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 	}
 
 	return s.writeFile(filePath, buf)
-}
-
-func (s *Scraper) getFilePath(URL *url.URL) string {
-	fileName := URL.Path
-	if fileName == "" || fileName == "/" {
-		fileName = "index.html"
-	} else if fileName[len(fileName)-1] == '/' {
-		fileName += "index.html"
-	}
-
-	return filepath.Join(".", s.URL.Host, fileName)
-}
-
-func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {
-	dir := filepath.Dir(filePath)
-	if len(dir) < len(s.URL.Host) { // nothing to append if it is the root dir
-		dir = filepath.Join(".", s.URL.Host, dir)
-	}
-	s.log.Debug("Creating dir", zap.String("Path", dir))
-	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	s.log.Debug("Creating file", zap.String("Path", filePath))
-	f, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(buf.Bytes())
-	if err != nil {
-		return err
-	}
-
-	return f.Close()
 }
