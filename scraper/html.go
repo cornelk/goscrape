@@ -18,6 +18,10 @@ func (s *Scraper) fixFileReferences(buf io.Reader) (string, error) {
 		s.fixQuerySelection("href", selection)
 	})
 
+	g.Find("link").Each(func(_ int, selection *goquery.Selection) {
+		s.fixQuerySelection("href", selection)
+	})
+
 	g.Find("img").Each(func(_ int, selection *goquery.Selection) {
 		s.fixQuerySelection("src", selection)
 	})
@@ -50,7 +54,7 @@ func (s *Scraper) fixQuerySelection(attribute string, selection *goquery.Selecti
 
 	if refStr == "" {
 		refStr = "/" // website root
-	} else if refStr[0] == '/' {
+	} else if len(refStr) > 1 && refStr[0] == '/' {
 		refStr = refStr[1:]
 	}
 	if refStr[len(refStr)-1] == '/' {
