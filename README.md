@@ -1,4 +1,4 @@
-# goscrape
+# goscrape [![Build Status](https://travis-ci.org/cornelk/goscrape.svg?branch=master)](https://travis-ci.org/cornelk/goscrape) [![Go Report Card](https://goreportcard.com/badge/cornelk/goscrape)](https://goreportcard.com/report/github.com/cornelk/goscrape)
 
 A web scraper built with Golang. It downloads the content of a website or blog and allows you to read it offline.
 
