@@ -9,6 +9,7 @@ import (
 	"github.com/uber-go/zap"
 )
 
+// encodeJPEG encodes a new JPG based on the given quality setting
 func (s *Scraper) encodeJPEG(img image.Image) *bytes.Buffer {
 	o := &jpeg.Options{
 		Quality: int(s.ImageQuality),

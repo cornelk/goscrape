@@ -16,40 +16,16 @@ var (
 	log     zap.Logger
 
 	depth        uint
+	excludes     []string
 	imageQuality uint
 	verbose      bool
 )
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "goscrape",
+	Use:   "goscrape http://website.com",
 	Short: "Scrape a website and create an offline browseable version on the disk",
-	Run: func(cmd *cobra.Command, args []string) {
-		log = appcontext.Logger
-		if verbose {
-			appcontext.LogLevel.SetLevel(zap.DebugLevel)
-		}
-
-		for _, url := range args {
-			sc, err := scraper.New(url)
-			if err != nil {
-				log.Fatal("Error occured", zap.Error(err))
-			}
-
-			if imageQuality >= 100 {
-				imageQuality = 0
-			}
-
-			sc.ImageQuality = imageQuality
-			sc.MaxDepth = depth
-
-			log.Info("Scraping", zap.Stringer("URL", sc.URL))
-			err = sc.Start()
-			if err != nil {
-				log.Error("Error occured", zap.Error(err))
-			}
-		}
-	},
+	Run:   startScraper,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -64,7 +40,8 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goscrape.yaml)")
 
-	RootCmd.Flags().UintVarP(&imageQuality, "imagequality", "i", 0, "image quality, 0 disable reencoding")
+	RootCmd.Flags().StringArrayVarP(&excludes, "exclude", "e", nil, "exclude URLs with PERL Regular Expressions support")
+	RootCmd.Flags().UintVarP(&imageQuality, "imagequality", "i", 0, "image quality, 0 to disable reencoding")
 	RootCmd.Flags().UintVarP(&depth, "depth", "d", 10, "download depth, 0 for unlimited")
 	RootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 }
@@ -80,4 +57,41 @@ func initConfig() {
 	viper.AutomaticEnv()             // read in environment variables that match
 
 	_ = viper.ReadInConfig()
+}
+
+func startScraper(cmd *cobra.Command, args []string) {
+	log = appcontext.Logger
+	if verbose {
+		appcontext.LogLevel.SetLevel(zap.DebugLevel)
+	}
+
+	if len(args) == 0 {
+		cmd.Help()
+		return
+	}
+
+	for _, url := range args {
+		sc, err := scraper.New(url)
+		if err != nil {
+			log.Fatal("Error occurred", zap.Error(err))
+		}
+
+		err = sc.SetExcludes(excludes)
+		if err != nil {
+			log.Fatal("Error occurred", zap.Error(err))
+		}
+
+		if imageQuality >= 100 {
+			imageQuality = 0
+		}
+
+		sc.ImageQuality = imageQuality
+		sc.MaxDepth = depth
+
+		log.Info("Scraping", zap.Stringer("URL", sc.URL))
+		err = sc.Start()
+		if err != nil {
+			log.Error("Error occurred", zap.Error(err))
+		}
+	}
 }

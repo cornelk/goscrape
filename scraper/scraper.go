@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/url"
 	"os"
+	"regexp"
 
 	"github.com/cornelk/goscrape/appcontext"
 
@@ -20,8 +21,9 @@ type (
 		MaxDepth     uint
 		URL          *url.URL
 
-		browser *browser.Browser
-		log     zap.Logger
+		browser  *browser.Browser
+		excludes []*regexp.Regexp
+		log      zap.Logger
 
 		assets map[string]bool
 		pages  map[string]bool
@@ -46,6 +48,20 @@ func New(URL string) (*Scraper, error) {
 		URL:     u,
 	}
 	return s, nil
+}
+
+func (s *Scraper) SetExcludes(excludes []string) error {
+	for _, e := range excludes {
+		re, err := regexp.Compile(e)
+		if err != nil {
+			return err
+		}
+
+		s.excludes = append(s.excludes, re)
+		s.log.Debug("Excluding", zap.Stringer("RE", re))
+	}
+
+	return nil
 }
 
 // Start starts the scraping
@@ -116,12 +132,16 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) error {
 	}
 
 	_, ok := s.pages[URL.Path]
-	if ok { // was already downloaded
+	if ok { // was already downloaded or checked
 		return nil
 	}
 
 	s.pages[URL.Path] = false
 	if s.MaxDepth != 0 && currentDepth == s.MaxDepth {
+		return nil
+	}
+
+	if s.isURLExcluded(URL) {
 		return nil
 	}
 
@@ -136,11 +156,15 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 	}
 
 	_, ok := s.assets[URL.Path]
-	if ok { // was already downloaded
+	if ok { // was already downloaded or checked
 		return nil
 	}
 
 	s.assets[URL.Path] = false
+
+	if s.isURLExcluded(URL) {
+		return nil
+	}
 
 	filePath := s.getFilePath(URL)
 	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
@@ -158,4 +182,14 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 	buf = s.checkFileTypeForRecode(filePath, buf)
 
 	return s.writeFile(filePath, buf)
+}
+
+func (s *Scraper) isURLExcluded(URL *url.URL) bool {
+	for _, re := range s.excludes {
+		if re.MatchString(URL.Path) {
+			s.log.Info("Skipping URL", zap.Stringer("URL", URL), zap.Stringer("Excluder", re))
+			return true
+		}
+	}
+	return false
 }

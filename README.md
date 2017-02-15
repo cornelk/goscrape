@@ -10,7 +10,7 @@ go install github.com/cornelk/goscrape
 
 ## Usage:
 ```
-goscrape http://website
+goscrape http://website.com
 ```
 
 Features and advantages over existing tools like wget, httrack, Teleport Pro:
@@ -28,18 +28,18 @@ Features and advantages over existing tools like wget, httrack, Teleport Pro:
 Scrape a website and create an offline browseable version on the disk
 
 Usage:
-  goscrape [flags]
+  goscrape http://website.com [flags]
 
 Flags:
-      --config string       config file (default is $HOME/.goscrape.yaml)
-  -d, --depth uint          Download depth, 0 for unlimited (default 10)
-  -i, --imagequality uint   Image quality, 0 to not reencode images
-  -v, --verbose             verbose output
+      --config string         config file (default is $HOME/.goscrape.yaml)
+  -d, --depth uint            download depth, 0 for unlimited (default 10)
+  -e, --exclude stringArray   exclude URLs with PERL Regular Expressions support
+  -i, --imagequality uint     image quality, 0 to disable reencoding
+  -v, --verbose               verbose output
 ```
 
 ## Planned features:
 
-* Excluding of files
-* Excluding of URLS
+* Select dir to write to
 * Including of external domains
 * Concurrent downloads
