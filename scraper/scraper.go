@@ -16,8 +16,9 @@ import (
 type (
 	// Scraper contains all scraping data
 	Scraper struct {
-		MaxDepth uint
-		URL      *url.URL
+		ImageQuality uint
+		MaxDepth     uint
+		URL          *url.URL
 
 		browser *browser.Browser
 		log     zap.Logger
@@ -59,11 +60,6 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 		return err
 	}
 
-	filePath := s.getFilePath(URL)
-	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-		return nil
-	}
-
 	buf := &bytes.Buffer{}
 	_, err = s.browser.Download(buf)
 	if err != nil {
@@ -76,7 +72,8 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 	}
 
 	buf = bytes.NewBufferString(html)
-	err = s.writeFile(filePath, buf)
+	filePath := s.getFilePath(URL)
+	err = s.writeFile(filePath, buf) // always update html files, content might have changed
 	if err != nil {
 		return err
 	}
@@ -131,6 +128,7 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) error {
 	return s.scrapeURL(URL, currentDepth+1)
 }
 
+// downloadAssetURL downloads an asset if it does not exist on disk yet.
 func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 	URL := asset.URL
 	if URL.Host != s.URL.Host {
@@ -156,6 +154,8 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 	if err != nil {
 		return err
 	}
+
+	buf = s.checkFileTypeForRecode(filePath, buf)
 
 	return s.writeFile(filePath, buf)
 }

@@ -225,6 +225,24 @@
 			"revisionTime": "2017-02-07T17:42:20Z"
 		},
 		{
+			"checksumSHA1": "E59Fl1NUFBZQzbhZwCmEPDwVjqs=",
+			"path": "gopkg.in/h2non/filetype.v1",
+			"revision": "e42395618f967c7925230905a29e63e787e88be6",
+			"revisionTime": "2016-12-11T18:15:04Z"
+		},
+		{
+			"checksumSHA1": "9uf/VvuecKvOYr3C/ncZOAh46gc=",
+			"path": "gopkg.in/h2non/filetype.v1/matchers",
+			"revision": "e42395618f967c7925230905a29e63e787e88be6",
+			"revisionTime": "2016-12-11T18:15:04Z"
+		},
+		{
+			"checksumSHA1": "vPleg/8tgVv8jnMqT7zEQ0jWW2M=",
+			"path": "gopkg.in/h2non/filetype.v1/types",
+			"revision": "e42395618f967c7925230905a29e63e787e88be6",
+			"revisionTime": "2016-12-11T18:15:04Z"
+		},
+		{
 			"checksumSHA1": "0KwOlQV1dNUh9X8t+5s7nX5bqfk=",
 			"path": "gopkg.in/yaml.v2",
 			"revision": "a3f3340b5840cee44f372bddb5880fcbc419b46a",

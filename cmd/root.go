@@ -15,8 +15,9 @@ var (
 	cfgFile string
 	log     zap.Logger
 
-	depth   uint
-	verbose bool
+	depth        uint
+	imageQuality uint
+	verbose      bool
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -35,6 +36,11 @@ var RootCmd = &cobra.Command{
 				log.Fatal("Error occured", zap.Error(err))
 			}
 
+			if imageQuality >= 100 {
+				imageQuality = 0
+			}
+
+			sc.ImageQuality = imageQuality
 			sc.MaxDepth = depth
 
 			log.Info("Scraping", zap.Stringer("URL", sc.URL))
@@ -58,7 +64,8 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goscrape.yaml)")
 
-	RootCmd.Flags().UintVarP(&depth, "depth", "d", 10, "Download depth, 0 for unlimited")
+	RootCmd.Flags().UintVarP(&imageQuality, "imagequality", "i", 0, "image quality, 0 disable reencoding")
+	RootCmd.Flags().UintVarP(&depth, "depth", "d", 10, "download depth, 0 for unlimited")
 	RootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 }
 
