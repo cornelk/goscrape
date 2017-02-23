@@ -25,8 +25,9 @@ type (
 		excludes []*regexp.Regexp
 		log      zap.Logger
 
-		assets map[string]bool
-		pages  map[string]bool
+		assets         map[string]bool
+		assetsExternal map[string]bool
+		pages          map[string]bool
 	}
 )
 
@@ -41,15 +42,17 @@ func New(URL string) (*Scraper, error) {
 	b.SetUserAgent(agent.GoogleBot())
 
 	s := &Scraper{
-		browser: b,
-		log:     appcontext.Logger,
-		assets:  make(map[string]bool),
-		pages:   make(map[string]bool),
-		URL:     u,
+		browser:        b,
+		log:            appcontext.Logger,
+		assets:         make(map[string]bool),
+		assetsExternal: make(map[string]bool),
+		pages:          make(map[string]bool),
+		URL:            u,
 	}
 	return s, nil
 }
 
+// SetExcludes sets and checks the exclusions regular expressions
 func (s *Scraper) SetExcludes(excludes []string) error {
 	for _, e := range excludes {
 		re, err := regexp.Compile(e)
@@ -82,7 +85,7 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 		return err
 	}
 
-	html, err := s.fixFileReferences(buf)
+	html, err := s.fixFileReferences(URL, buf)
 	if err != nil {
 		return err
 	}
@@ -151,16 +154,19 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) error {
 // downloadAssetURL downloads an asset if it does not exist on disk yet.
 func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 	URL := asset.URL
-	if URL.Host != s.URL.Host {
-		return nil
-	}
 
-	_, ok := s.assets[URL.Path]
-	if ok { // was already downloaded or checked
-		return nil
-	}
+	if URL.Host == s.URL.Host {
+		_, ok := s.assets[URL.Path]
+		if ok { // was already downloaded or checked
+			return nil
+		}
 
-	s.assets[URL.Path] = false
+		s.assets[URL.Path] = false
+	} else {
+		if s.isExternalFileChecked(URL) {
+			return nil
+		}
+	}
 
 	if s.isURLExcluded(URL) {
 		return nil
@@ -191,5 +197,22 @@ func (s *Scraper) isURLExcluded(URL *url.URL) bool {
 			return true
 		}
 	}
+	return false
+}
+
+func (s *Scraper) isExternalFileChecked(URL *url.URL) bool {
+	if URL.Host == s.URL.Host {
+		return false
+	}
+
+	fullURL := URL.String()
+	_, ok := s.assetsExternal[fullURL]
+	if ok { // was already downloaded or checked
+		return true
+	}
+
+	s.assetsExternal[fullURL] = true
+	s.log.Info("External URL", zap.Stringer("URL", URL))
+
 	return false
 }

@@ -20,6 +20,7 @@ Features and advantages over existing tools like wget, httrack, Teleport Pro:
 * Excluded URLS will not be fetched (unlike [wget](https://savannah.gnu.org/bugs/?20808))
 * No incomplete temp files are left on disk
 * Downloaded asset files are skipped in a new scraper run
+* Assets from external domains are downloaded automatically
 * Sane default values
 
 ## Options:
@@ -33,7 +34,7 @@ Usage:
 Flags:
       --config string         config file (default is $HOME/.goscrape.yaml)
   -d, --depth uint            download depth, 0 for unlimited (default 10)
-  -e, --exclude stringArray   exclude URLs with PERL Regular Expressions support
+  -x, --exclude stringArray   exclude URLs with PERL Regular Expressions support
   -i, --imagequality uint     image quality, 0 to disable reencoding
   -v, --verbose               verbose output
 ```

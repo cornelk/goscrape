@@ -40,7 +40,7 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goscrape.yaml)")
 
-	RootCmd.Flags().StringArrayVarP(&excludes, "exclude", "e", nil, "exclude URLs with PERL Regular Expressions support")
+	RootCmd.Flags().StringArrayVarP(&excludes, "exclude", "x", nil, "exclude URLs with PERL Regular Expressions support")
 	RootCmd.Flags().UintVarP(&imageQuality, "imagequality", "i", 0, "image quality, 0 to disable reencoding")
 	RootCmd.Flags().UintVarP(&depth, "depth", "d", 10, "download depth, 0 for unlimited")
 	RootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")

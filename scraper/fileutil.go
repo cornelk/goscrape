@@ -20,7 +20,12 @@ func (s *Scraper) getFilePath(URL *url.URL) string {
 		fileName += "index.html"
 	}
 
-	return filepath.Join(".", s.URL.Host, fileName)
+	var externalHost string
+	if URL.Host != s.URL.Host {
+		externalHost = "_" + URL.Host // _ is a prefix for external domains on the filesystem
+	}
+
+	return filepath.Join(".", s.URL.Host, externalHost, fileName)
 }
 
 func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {

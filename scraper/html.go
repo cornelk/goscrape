@@ -3,37 +3,39 @@ package scraper
 import (
 	"io"
 	"net/url"
+	"path/filepath"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/uber-go/zap"
 )
 
-func (s *Scraper) fixFileReferences(buf io.Reader) (string, error) {
+func (s *Scraper) fixFileReferences(URL *url.URL, buf io.Reader) (string, error) {
 	g, err := goquery.NewDocumentFromReader(buf)
 	if err != nil {
 		return "", err
 	}
 
 	g.Find("a").Each(func(_ int, selection *goquery.Selection) {
-		s.fixQuerySelection("href", selection)
+		s.fixQuerySelection(URL, "href", selection, true)
 	})
 
 	g.Find("link").Each(func(_ int, selection *goquery.Selection) {
-		s.fixQuerySelection("href", selection)
+		s.fixQuerySelection(URL, "href", selection, false)
 	})
 
 	g.Find("img").Each(func(_ int, selection *goquery.Selection) {
-		s.fixQuerySelection("src", selection)
+		s.fixQuerySelection(URL, "src", selection, false)
 	})
 
 	g.Find("script").Each(func(_ int, selection *goquery.Selection) {
-		s.fixQuerySelection("src", selection)
+		s.fixQuerySelection(URL, "src", selection, false)
 	})
 
 	return g.Html()
 }
 
-func (s *Scraper) fixQuerySelection(attribute string, selection *goquery.Selection) {
+func (s *Scraper) fixQuerySelection(URL *url.URL, attribute string, selection *goquery.Selection, page bool) {
 	src, ok := selection.Attr(attribute)
 	if !ok {
 		return
@@ -43,24 +45,32 @@ func (s *Scraper) fixQuerySelection(attribute string, selection *goquery.Selecti
 	if err != nil {
 		return
 	}
-	if ur.Host != s.URL.Host {
-		return
+
+	var refRes *url.URL
+	if ur.Host != "" && ur.Host != s.URL.Host {
+		refRes = URL.ResolveReference(ur)
+		refRes.Path = filepath.Join("_"+ur.Host, refRes.Path)
+	} else {
+		refRes = URL.ResolveReference(ur)
 	}
 
-	refRes := s.URL.ResolveReference(ur)
-	refRes.Scheme = "" // remove http/https
 	refRes.Host = ""   // remove host
+	refRes.Scheme = "" // remove http/https
 	refStr := refRes.String()
 
 	if refStr == "" {
 		refStr = "/" // website root
-	} else if len(refStr) > 1 && refStr[0] == '/' {
-		refStr = refStr[1:]
-	}
-	if refStr[len(refStr)-1] == '/' {
-		refStr += "index.html"
 	}
 
-	s.log.Debug("HTML Element fixed", zap.Stringer("URL", refRes), zap.String("Fixed", refStr))
+	if page && refStr[len(refStr)-1] == '/' {
+		refStr += "index.html"
+	}
+	refStr = strings.TrimPrefix(refStr, "/")
+
+	if src == refStr { // nothing changed
+		return
+	}
+
+	s.log.Debug("HTML Element relinked", zap.String("URL", src), zap.String("Fixed", refStr))
 	selection.SetAttr(attribute, refStr)
 }
