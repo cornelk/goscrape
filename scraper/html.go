@@ -56,6 +56,10 @@ func (s *Scraper) fixQuerySelection(URL *url.URL, attribute string, selection *g
 
 	var refRes *url.URL
 	if ur.Host != "" && ur.Host != s.URL.Host {
+		if linkIsAPage { // do not change links to external websites
+			return
+		}
+
 		refRes = URL.ResolveReference(ur)
 		refRes.Path = filepath.Join("_"+ur.Host, refRes.Path)
 	} else {
@@ -76,9 +80,17 @@ func (s *Scraper) fixQuerySelection(URL *url.URL, attribute string, selection *g
 		}
 	}
 
-	if linkIsAPage && refStr[len(refStr)-1] == '/' {
-		refStr += "index.html"
+	if linkIsAPage {
+		if refStr[len(refStr)-1] == '/' {
+			refStr += "index.html" // link dir index to index.html
+		} else {
+			l := strings.LastIndexByte(refStr, '/')
+			if l != -1 && l < len(refStr) && refStr[l+1] == '#' {
+				refStr = refStr[:l+1] + "index.html" + refStr[l+1:] // link anchor correct
+			}
+		}
 	}
+
 	refStr = strings.TrimPrefix(refStr, "/")
 
 	if src == refStr { // nothing changed
