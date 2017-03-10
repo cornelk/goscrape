@@ -1,8 +1,10 @@
-# goscrape [![Build Status](https://travis-ci.org/cornelk/goscrape.svg?branch=master)](https://travis-ci.org/cornelk/goscrape) [![Go Report Card](https://goreportcard.com/badge/cornelk/goscrape)](https://goreportcard.com/report/github.com/cornelk/goscrape)
+# goscrape [![Build Status](https://travis-ci.org/cornelk/goscrape.svg?branch=master)](https://travis-ci.org/cornelk/goscrape) [![GoDoc](https://godoc.org/github.com/cornelk/goscrape?status.svg)](https://godoc.org/github.com/cornelk/goscrape) [![Go Report Card](https://goreportcard.com/badge/cornelk/goscrape)](https://goreportcard.com/report/github.com/cornelk/goscrape) [![codecov](https://codecov.io/gh/cornelk/goscrape/branch/master/graph/badge.svg)](https://codecov.io/gh/cornelk/goscrape)
 
 A web scraper built with Golang. It downloads the content of a website or blog and allows you to read it offline.
 
 ## Install:
+
+You need to have Golang installed, otherwise follow the guide at [https://golang.org/doc/install](https://golang.org/doc/install).
 
 ```
 go install github.com/cornelk/goscrape
