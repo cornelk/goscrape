@@ -69,6 +69,11 @@ func (s *Scraper) SetExcludes(excludes []string) error {
 
 // Start starts the scraping
 func (s *Scraper) Start() error {
+	p := s.URL.Path
+	if p == "" {
+		p = "/"
+	}
+	s.pages[p] = false
 	return s.scrapeURL(s.URL, 0)
 }
 
@@ -116,39 +121,53 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 		}
 	}
 
+	var toScrape []*url.URL
+	// check first and download afterwards to not hit max depth limit for start page links because of recursive linking
 	for _, link := range s.browser.Links() {
-		err = s.checkPageURL(link.URL, currentDepth)
-		if err != nil {
-			return nil
+		if s.checkPageURL(link.URL, currentDepth) {
+			toScrape = append(toScrape, link.URL)
 		}
 	}
 
+	for _, URL := range toScrape {
+		err = s.scrapeURL(URL, currentDepth+1)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) error {
+// checkPageURL checks if a page should be downloaded
+func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) bool {
 	if URL.Host != s.URL.Host {
-		return nil
-	}
-	if URL.Path == "" || URL.Path == "/" {
-		return nil
+		s.log.Debug("Skipping external host page", zap.Stringer("URL", URL))
+		return false
 	}
 
-	_, ok := s.pages[URL.Path]
+	p := URL.Path
+	if p == "" {
+		p = "/"
+	}
+
+	_, ok := s.pages[p]
 	if ok { // was already downloaded or checked
-		return nil
+		s.log.Debug("Skipping already checked page", zap.Stringer("URL", URL))
+		return false
 	}
 
-	s.pages[URL.Path] = false
+	s.pages[p] = false
 	if s.MaxDepth != 0 && currentDepth == s.MaxDepth {
-		return nil
+		s.log.Debug("Skipping too deep level page", zap.Stringer("URL", URL))
+		return false
 	}
 
 	if s.isURLExcluded(URL) {
-		return nil
+		return false
 	}
 
-	return s.scrapeURL(URL, currentDepth+1)
+	s.log.Debug("New page to queue", zap.Stringer("URL", URL))
+	return true
 }
 
 // downloadAssetURL downloads an asset if it does not exist on disk yet.

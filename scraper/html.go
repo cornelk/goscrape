@@ -100,3 +100,15 @@ func (s *Scraper) fixQuerySelection(URL *url.URL, attribute string, selection *g
 	s.log.Debug("HTML Element relinked", zap.String("URL", src), zap.String("Fixed", refStr))
 	selection.SetAttr(attribute, refStr)
 }
+
+func (s *Scraper) RemoveAnchor(path string) string {
+	sl := strings.LastIndexByte(path, '/')
+	if sl == -1 {
+		return path
+	}
+	an := strings.LastIndexByte(path[sl+1:], '#')
+	if an == -1 {
+		return path
+	}
+	return path[:sl+an+1]
+}
