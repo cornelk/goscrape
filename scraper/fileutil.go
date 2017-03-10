@@ -12,12 +12,28 @@ import (
 	"gopkg.in/h2non/filetype.v1/types"
 )
 
-func (s *Scraper) getFilePath(URL *url.URL) string {
+// GetFilePath returns a file path for a URL to store the URL content in
+func (s *Scraper) GetFilePath(URL *url.URL, isAPage bool) string {
 	fileName := URL.Path
-	if fileName == "" || fileName == "/" {
-		fileName = "index.html"
-	} else if fileName[len(fileName)-1] == '/' {
-		fileName += "index.html"
+	if isAPage {
+		// root of domain will be index.html
+		if fileName == "" || fileName == "/" {
+			fileName = "index.html"
+			// directory index will be index.html in the directory
+		} else if fileName[len(fileName)-1] == '/' {
+			fileName += "index.html"
+		} else {
+			ext := filepath.Ext(fileName)
+			// if file extension is missing add .html
+			if ext == "" {
+				fileName += ".html"
+			} else {
+				// replace any other extension with .html
+				if ext != ".html" {
+					fileName = fileName[:len(fileName)-len(ext)] + ".html"
+				}
+			}
+		}
 	}
 
 	var externalHost string

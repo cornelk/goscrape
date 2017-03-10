@@ -96,7 +96,7 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 	}
 
 	buf = bytes.NewBufferString(html)
-	filePath := s.getFilePath(URL)
+	filePath := s.GetFilePath(URL, true)
 	err = s.writeFile(filePath, buf) // always update html files, content might have changed
 	if err != nil {
 		return err
@@ -191,7 +191,7 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 		return nil
 	}
 
-	filePath := s.getFilePath(URL)
+	filePath := s.GetFilePath(URL, false)
 	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
 		return nil
 	}
