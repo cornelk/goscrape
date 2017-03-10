@@ -5,7 +5,7 @@ import "testing"
 func TestRemoveAnchor(t *testing.T) {
 	s, err := New("")
 	if err != nil {
-		t.Error("New failed.")
+		t.Errorf("Scraper New failed: %v", err)
 	}
 
 	var fixtures = map[string]string{
