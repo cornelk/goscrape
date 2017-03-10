@@ -9,6 +9,7 @@ func TestRemoveAnchor(t *testing.T) {
 	}
 
 	var fixtures = map[string]string{
+		"github.com":                 "github.com",
 		"https://github.com/":        "https://github.com/",
 		"https://github.com/#anchor": "https://github.com/",
 	}

@@ -6,27 +6,35 @@ import (
 )
 
 func TestGetFilePath(t *testing.T) {
-	s, err := New("https://google.com/")
-	if err != nil {
-		t.Errorf("Scraper New failed: %v", err)
+	type filePathFixture struct {
+		BaseURL          string
+		DownloadURL      string
+		ExpectedFilePath string
 	}
 
-	var fixtures = map[string]string{
-		"https://github.com/":          "google.com/_github.com/index.html",
-		"https://github.com/#anchor":   "google.com/_github.com/index.html",
-		"https://github.com/test":      "google.com/_github.com/test.html",
-		"https://github.com/test.aspx": "google.com/_github.com/test.html",
+	var fixtures = []filePathFixture{
+		{"https://google.com/", "https://github.com/", "google.com/_github.com/index.html"},
+		{"https://google.com/", "https://github.com/#anchor", "google.com/_github.com/index.html"},
+		{"https://google.com/", "https://github.com/test", "google.com/_github.com/test.html"},
+		{"https://google.com/", "https://github.com/test/", "google.com/_github.com/test/index.html"},
+		{"https://google.com/", "https://github.com/test.aspx", "google.com/_github.com/test.html"},
+		{"https://google.com/", "https://google.com/settings", "google.com/settings.html"},
 	}
 
-	for input, result := range fixtures {
-		URL, err := url.Parse(input)
+	for _, fix := range fixtures {
+		s, err := New(fix.BaseURL)
+		if err != nil {
+			t.Errorf("Scraper New failed: %v", err)
+		}
+
+		URL, err := url.Parse(fix.DownloadURL)
 		if err != nil {
 			t.Errorf("URL parse failed: %v", err)
 		}
 
 		output := s.GetFilePath(URL, true)
-		if output != result {
-			t.Errorf("URL %s should have become file %s but was %s", input, result, output)
+		if output != fix.ExpectedFilePath {
+			t.Errorf("URL %s should have become file %s but was %s", fix.DownloadURL, fix.ExpectedFilePath, output)
 		}
 	}
 }
