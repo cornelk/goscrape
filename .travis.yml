@@ -6,7 +6,7 @@ go:
   - 1.8
 
 script:
-  - go test -coverprofile=coverage.txt -covermode=atomic
+  - go test -coverprofile=coverage.txt -covermode=atomic github.com/cornelk/goscrape/scraper
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
