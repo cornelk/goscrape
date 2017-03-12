@@ -12,25 +12,32 @@ import (
 	"gopkg.in/h2non/filetype.v1/types"
 )
 
+var (
+	// PageExtension is the file extension that downloaded pages get
+	PageExtension = ".html"
+	// PageDirIndex is the file name of the index file for every dir
+	PageDirIndex = "index" + PageExtension
+)
+
 // GetFilePath returns a file path for a URL to store the URL content in
 func (s *Scraper) GetFilePath(URL *url.URL, isAPage bool) string {
 	fileName := URL.Path
 	if isAPage {
 		// root of domain will be index.html
 		if fileName == "" || fileName == "/" {
-			fileName = "index.html"
+			fileName = PageDirIndex
 			// directory index will be index.html in the directory
 		} else if fileName[len(fileName)-1] == '/' {
-			fileName += "index.html"
+			fileName += PageDirIndex
 		} else {
 			ext := filepath.Ext(fileName)
 			// if file extension is missing add .html
 			if ext == "" {
-				fileName += ".html"
+				fileName += PageExtension
 			} else {
 				// replace any other extension with .html
-				if ext != ".html" {
-					fileName = fileName[:len(fileName)-len(ext)] + ".html"
+				if ext != PageExtension {
+					fileName = fileName[:len(fileName)-len(ext)] + PageExtension
 				}
 			}
 		}

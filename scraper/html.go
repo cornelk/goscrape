@@ -82,11 +82,11 @@ func (s *Scraper) fixQuerySelection(URL *url.URL, attribute string, selection *g
 
 	if linkIsAPage {
 		if refStr[len(refStr)-1] == '/' {
-			refStr += "index.html" // link dir index to index.html
+			refStr += PageDirIndex // link dir index to index.html
 		} else {
 			l := strings.LastIndexByte(refStr, '/')
 			if l != -1 && l < len(refStr) && refStr[l+1] == '#' {
-				refStr = refStr[:l+1] + "index.html" + refStr[l+1:] // link anchor correct
+				refStr = refStr[:l+1] + PageDirIndex + refStr[l+1:] // link anchor correct
 			}
 		}
 	}
@@ -101,6 +101,7 @@ func (s *Scraper) fixQuerySelection(URL *url.URL, attribute string, selection *g
 	selection.SetAttr(attribute, refStr)
 }
 
+// RemoveAnchor removes anchors from URLS
 func (s *Scraper) RemoveAnchor(path string) string {
 	sl := strings.LastIndexByte(path, '/')
 	if sl == -1 {
