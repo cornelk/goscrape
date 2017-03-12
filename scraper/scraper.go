@@ -38,6 +38,10 @@ func New(URL string) (*Scraper, error) {
 		return nil, err
 	}
 
+	if u.Scheme == "" {
+		u.Scheme = "http" // if no URL scheme was given default to http
+	}
+
 	b := surf.NewBrowser()
 	b.SetUserAgent(agent.GoogleBot())
 
@@ -88,6 +92,11 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 	_, err = s.browser.Download(buf)
 	if err != nil {
 		return err
+	}
+
+	if currentDepth == 0 {
+		URL = s.browser.Url() // use the URL that the website returned as new base url for the scrape, in case of a redirect
+		s.URL = URL
 	}
 
 	html, err := s.fixFileReferences(URL, buf)
