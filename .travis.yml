@@ -4,6 +4,7 @@ go:
   - 1.6
   - 1.7
   - 1.8
+  - 1.9
 
 script:
   - go test -coverprofile=coverage.txt -covermode=atomic github.com/cornelk/goscrape/scraper
