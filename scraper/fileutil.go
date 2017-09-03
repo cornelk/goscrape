@@ -7,9 +7,6 @@ import (
 	"path/filepath"
 
 	"go.uber.org/zap"
-	"gopkg.in/h2non/filetype.v1"
-	"gopkg.in/h2non/filetype.v1/matchers"
-	"gopkg.in/h2non/filetype.v1/types"
 )
 
 var (
@@ -75,33 +72,4 @@ func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {
 	}
 
 	return f.Close()
-}
-
-func (s *Scraper) checkFileTypeForRecode(filePath string, buf *bytes.Buffer) *bytes.Buffer {
-	if s.ImageQuality == 0 {
-		return buf
-	}
-
-	kind, err := filetype.Match(buf.Bytes())
-	if err != nil || kind == types.Unknown {
-		return buf
-	}
-
-	s.log.Debug("File type detected", zap.String("Type", kind.MIME.Type), zap.String("Subtype", kind.MIME.Subtype))
-
-	if kind.MIME.Type == matchers.TypeJpeg.MIME.Type && kind.MIME.Subtype == matchers.TypeJpeg.MIME.Subtype {
-		if recoded := s.recodeJPEG(filePath, buf.Bytes()); recoded != nil {
-			return recoded
-		}
-		return buf
-	}
-
-	if kind.MIME.Type == matchers.TypePng.MIME.Type && kind.MIME.Subtype == matchers.TypePng.MIME.Subtype {
-		if recoded := s.recodePNG(filePath, buf.Bytes()); recoded != nil {
-			return recoded
-		}
-		return buf
-	}
-
-	return buf
 }

@@ -14,10 +14,10 @@ func TestRemoveAnchor(t *testing.T) {
 		"https://github.com/#anchor": "https://github.com/",
 	}
 
-	for input, result := range fixtures {
+	for input, expected := range fixtures {
 		output := s.RemoveAnchor(input)
-		if output != result {
-			t.Errorf("URL %s should have been %s but was %s", input, result, output)
+		if output != expected {
+			t.Errorf("URL %s should have been %s but was %s", input, expected, output)
 		}
 	}
 }

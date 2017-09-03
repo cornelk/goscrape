@@ -27,9 +27,13 @@ type (
 		log      *zap.Logger
 
 		assets         map[string]bool
+		imagesQueue    []*browser.DownloadableAsset
 		assetsExternal map[string]bool
 		pages          map[string]bool
 	}
+
+	// assetProcessor is a processor of a downloaded asset.
+	assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 )
 
 // New creates a new Scraper instance
@@ -137,21 +141,25 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 }
 
 func (s *Scraper) downloadReferences() error {
+	for _, image := range s.browser.Images() {
+		s.imagesQueue = append(s.imagesQueue, &image.DownloadableAsset)
+	}
 	for _, stylesheet := range s.browser.Stylesheets() {
-		if err := s.downloadAssetURL(&stylesheet.DownloadableAsset); err != nil {
+		if err := s.downloadAssetURL(&stylesheet.DownloadableAsset, s.checkCSSForURLs); err != nil {
 			return err
 		}
 	}
 	for _, script := range s.browser.Scripts() {
-		if err := s.downloadAssetURL(&script.DownloadableAsset); err != nil {
+		if err := s.downloadAssetURL(&script.DownloadableAsset, nil); err != nil {
 			return err
 		}
 	}
-	for _, image := range s.browser.Images() {
-		if err := s.downloadAssetURL(&image.DownloadableAsset); err != nil {
+	for _, image := range s.imagesQueue {
+		if err := s.downloadAssetURL(image, s.checkImageForRecode); err != nil {
 			return err
 		}
 	}
+	s.imagesQueue = nil
 	return nil
 }
 
@@ -187,7 +195,7 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) bool {
 }
 
 // downloadAssetURL downloads an asset if it does not exist on disk yet.
-func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
+func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor assetProcessor) error {
 	URL := asset.URL
 
 	if URL.Host == s.URL.Host {
@@ -219,7 +227,9 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 		return err
 	}
 
-	buf = s.checkFileTypeForRecode(filePath, buf)
+	if processor != nil {
+		buf = processor(URL, buf)
+	}
 
 	return s.writeFile(filePath, buf)
 }

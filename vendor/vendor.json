@@ -21,6 +21,12 @@
 			"revisionTime": "2017-03-29T04:21:07Z"
 		},
 		{
+			"checksumSHA1": "V0Ftw9E3y+xKqzkK1ZoWgH7W9vo=",
+			"path": "github.com/gorilla/css/scanner",
+			"revision": "398b0b046082ecb3694c01bec6b336a06a4e530a",
+			"revisionTime": "2017-02-17T19:22:53Z"
+		},
+		{
 			"checksumSHA1": "7JBkp3EZoc0MSbiyWfzVhO4RYoY=",
 			"path": "github.com/hashicorp/hcl",
 			"revision": "8f6b1344a92ff8877cf24a5de9177bf7d0a2a187",
