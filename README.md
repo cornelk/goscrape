@@ -38,11 +38,6 @@ Flags:
   -d, --depth uint            download depth, 0 for unlimited (default 10)
   -x, --exclude stringArray   exclude URLs with PERL Regular Expressions support
   -i, --imagequality uint     image quality, 0 to disable reencoding
+  -o, --output string         output directory to write files to
   -v, --verbose               verbose output
 ```
-
-## Planned features:
-
-* Select dir to write to
-* Including of external domains
-* Concurrent downloads

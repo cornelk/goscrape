@@ -16,13 +16,15 @@ import (
 type (
 	// Scraper contains all scraping data
 	Scraper struct {
-		ImageQuality uint
-		MaxDepth     uint
-		URL          *url.URL
+		// Configuration
+		ImageQuality    uint
+		MaxDepth        uint
+		OutputDirectory string
+		URL             *url.URL
 
 		browser  *browser.Browser
 		excludes []*regexp.Regexp
-		log      zap.Logger
+		log      *zap.Logger
 
 		assets         map[string]bool
 		assetsExternal map[string]bool
@@ -72,6 +74,12 @@ func (s *Scraper) SetExcludes(excludes []string) error {
 
 // Start starts the scraping
 func (s *Scraper) Start() error {
+	if s.OutputDirectory != "" {
+		if err := os.MkdirAll(s.OutputDirectory, os.ModePerm); err != nil {
+			return err
+		}
+	}
+
 	p := s.URL.Path
 	if p == "" {
 		p = "/"
@@ -82,14 +90,12 @@ func (s *Scraper) Start() error {
 
 func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 	s.log.Info("Downloading", zap.Stringer("URL", URL))
-	err := s.browser.Open(URL.String())
-	if err != nil {
+	if err := s.browser.Open(URL.String()); err != nil {
 		return err
 	}
 
 	buf := &bytes.Buffer{}
-	_, err = s.browser.Download(buf)
-	if err != nil {
+	if _, err := s.browser.Download(buf); err != nil {
 		return err
 	}
 
@@ -105,28 +111,13 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 
 	buf = bytes.NewBufferString(html)
 	filePath := s.GetFilePath(URL, true)
-	err = s.writeFile(filePath, buf) // always update html files, content might have changed
-	if err != nil {
+	// always update html files, content might have changed
+	if err = s.writeFile(filePath, buf); err != nil {
 		return err
 	}
 
-	for _, stylesheet := range s.browser.Stylesheets() {
-		err = s.downloadAssetURL(&stylesheet.DownloadableAsset)
-		if err != nil {
-			return nil
-		}
-	}
-	for _, script := range s.browser.Scripts() {
-		err = s.downloadAssetURL(&script.DownloadableAsset)
-		if err != nil {
-			return nil
-		}
-	}
-	for _, image := range s.browser.Images() {
-		err = s.downloadAssetURL(&image.DownloadableAsset)
-		if err != nil {
-			return nil
-		}
+	if err = s.downloadReferences(); err != nil {
+		return err
 	}
 
 	var toScrape []*url.URL
@@ -138,8 +129,26 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 	}
 
 	for _, URL := range toScrape {
-		err = s.scrapeURL(URL, currentDepth+1)
-		if err != nil {
+		if err = s.scrapeURL(URL, currentDepth+1); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Scraper) downloadReferences() error {
+	for _, stylesheet := range s.browser.Stylesheets() {
+		if err := s.downloadAssetURL(&stylesheet.DownloadableAsset); err != nil {
+			return err
+		}
+	}
+	for _, script := range s.browser.Scripts() {
+		if err := s.downloadAssetURL(&script.DownloadableAsset); err != nil {
+			return err
+		}
+	}
+	for _, image := range s.browser.Images() {
+		if err := s.downloadAssetURL(&image.DownloadableAsset); err != nil {
 			return err
 		}
 	}
@@ -158,8 +167,7 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) bool {
 		p = "/"
 	}
 
-	_, ok := s.pages[p]
-	if ok { // was already downloaded or checked
+	if _, ok := s.pages[p]; ok { // was already downloaded or checked
 		s.log.Debug("Skipping already checked page", zap.Stringer("URL", URL))
 		return false
 	}
@@ -183,8 +191,7 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset) error {
 	URL := asset.URL
 
 	if URL.Host == s.URL.Host {
-		_, ok := s.assets[URL.Path]
-		if ok { // was already downloaded or checked
+		if _, ok := s.assets[URL.Path]; ok { // was already downloaded or checked
 			return nil
 		}
 
@@ -233,8 +240,7 @@ func (s *Scraper) isExternalFileChecked(URL *url.URL) bool {
 	}
 
 	fullURL := URL.String()
-	_, ok := s.assetsExternal[fullURL]
-	if ok { // was already downloaded or checked
+	if _, ok := s.assetsExternal[fullURL]; ok { // was already downloaded or checked
 		return true
 	}
 

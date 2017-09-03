@@ -48,7 +48,7 @@ func (s *Scraper) GetFilePath(URL *url.URL, isAPage bool) string {
 		externalHost = "_" + URL.Host // _ is a prefix for external domains on the filesystem
 	}
 
-	return filepath.Join(".", s.URL.Host, externalHost, fileName)
+	return filepath.Join(s.OutputDirectory, s.URL.Host, externalHost, fileName)
 }
 
 func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {
@@ -68,9 +68,8 @@ func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {
 		return err
 	}
 
-	_, err = f.Write(buf.Bytes())
-	if err != nil {
-		_ = f.Close()
+	if _, err = f.Write(buf.Bytes()); err != nil {
+		_ = f.Close() // try to close and remove file but return the first error
 		_ = os.Remove(filePath)
 		return err
 	}
@@ -91,16 +90,14 @@ func (s *Scraper) checkFileTypeForRecode(filePath string, buf *bytes.Buffer) *by
 	s.log.Debug("File type detected", zap.String("Type", kind.MIME.Type), zap.String("Subtype", kind.MIME.Subtype))
 
 	if kind.MIME.Type == matchers.TypeJpeg.MIME.Type && kind.MIME.Subtype == matchers.TypeJpeg.MIME.Subtype {
-		recoded := s.recodeJPEG(filePath, buf.Bytes())
-		if recoded != nil {
+		if recoded := s.recodeJPEG(filePath, buf.Bytes()); recoded != nil {
 			return recoded
 		}
 		return buf
 	}
 
 	if kind.MIME.Type == matchers.TypePng.MIME.Type && kind.MIME.Subtype == matchers.TypePng.MIME.Subtype {
-		recoded := s.recodePNG(filePath, buf.Bytes())
-		if recoded != nil {
+		if recoded := s.recodePNG(filePath, buf.Bytes()); recoded != nil {
 			return recoded
 		}
 		return buf

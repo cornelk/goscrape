@@ -6,13 +6,11 @@ import (
 
 var (
 	// Logger is the global logger instance
-	Logger zap.Logger
+	Logger *zap.Logger
 	// LogLevel is the log level that can be changed at runtime
 	LogLevel zap.AtomicLevel
 	// LogConf contains the global logger config
 	LogConf zap.Config
-
-	logger *zap.Logger
 )
 
 func init() {
@@ -22,5 +20,5 @@ func init() {
 	LogConf.DisableStacktrace = true
 	LogLevel = LogConf.Level
 	LogLevel.SetLevel(zap.InfoLevel)
-	logger, _ = LogConf.Build()
+	Logger, _ = LogConf.Build()
 }

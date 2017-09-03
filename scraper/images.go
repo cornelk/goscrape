@@ -16,8 +16,7 @@ func (s *Scraper) encodeJPEG(img image.Image) *bytes.Buffer {
 	}
 
 	outBuf := &bytes.Buffer{}
-	err := jpeg.Encode(outBuf, img, o)
-	if err != nil {
+	if err := jpeg.Encode(outBuf, img, o); err != nil {
 		return nil
 	}
 	return outBuf

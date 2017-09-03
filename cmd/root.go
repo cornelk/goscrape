@@ -12,10 +12,11 @@ import (
 
 var (
 	cfgFile string
-	log     zap.Logger
 
+	// program parameters
 	depth        uint
 	excludes     []string
+	output       string
 	imageQuality uint
 	verbose      bool
 )
@@ -40,6 +41,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goscrape.yaml)")
 
 	RootCmd.Flags().StringArrayVarP(&excludes, "exclude", "x", nil, "exclude URLs with PERL Regular Expressions support")
+	RootCmd.Flags().StringVarP(&output, "output", "o", "", "output directory to write files to")
 	RootCmd.Flags().UintVarP(&imageQuality, "imagequality", "i", 0, "image quality, 0 to disable reencoding")
 	RootCmd.Flags().UintVarP(&depth, "depth", "d", 10, "download depth, 0 for unlimited")
 	RootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
@@ -59,7 +61,7 @@ func initConfig() {
 }
 
 func startScraper(cmd *cobra.Command, args []string) {
-	log = appcontext.Logger
+	log := appcontext.Logger
 	if verbose {
 		appcontext.LogLevel.SetLevel(zap.DebugLevel)
 	}
@@ -72,12 +74,12 @@ func startScraper(cmd *cobra.Command, args []string) {
 	for _, url := range args {
 		sc, err := scraper.New(url)
 		if err != nil {
-			log.Fatal("Error occurred", zap.Error(err))
+			log.Fatal("Initializing scraper failed", zap.Error(err))
 		}
 
 		err = sc.SetExcludes(excludes)
 		if err != nil {
-			log.Fatal("Error occurred", zap.Error(err))
+			log.Fatal("Configuring excludes failed", zap.Error(err))
 		}
 
 		if imageQuality >= 100 {
@@ -86,11 +88,12 @@ func startScraper(cmd *cobra.Command, args []string) {
 
 		sc.ImageQuality = imageQuality
 		sc.MaxDepth = depth
+		sc.OutputDirectory = output
 
 		log.Info("Scraping", zap.Stringer("URL", sc.URL))
 		err = sc.Start()
 		if err != nil {
-			log.Error("Error occurred", zap.Error(err))
+			log.Error("Scraping failed", zap.Error(err))
 		}
 	}
 }
