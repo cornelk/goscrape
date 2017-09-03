@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 	"gopkg.in/h2non/filetype.v1"
 	"gopkg.in/h2non/filetype.v1/matchers"
 	"gopkg.in/h2non/filetype.v1/types"

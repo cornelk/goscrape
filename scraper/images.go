@@ -6,7 +6,7 @@ import (
 	"image/jpeg"
 	"image/png"
 
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 )
 
 // encodeJPEG encodes a new JPG based on the given quality setting

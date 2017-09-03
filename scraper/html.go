@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 )
 
 func (s *Scraper) fixFileReferences(URL *url.URL, buf io.Reader) (string, error) {

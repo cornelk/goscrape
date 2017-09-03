@@ -1,9 +1,7 @@
 package appcontext
 
 import (
-	"time"
-
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 )
 
 var (
@@ -11,13 +9,18 @@ var (
 	Logger zap.Logger
 	// LogLevel is the log level that can be changed at runtime
 	LogLevel zap.AtomicLevel
+	// LogConf contains the global logger config
+	LogConf zap.Config
+
+	logger *zap.Logger
 )
 
 func init() {
-	LogLevel = zap.DynamicLevel()
+	LogConf = zap.NewDevelopmentConfig()
+	LogConf.Development = false
+	LogConf.DisableCaller = true
+	LogConf.DisableStacktrace = true
+	LogLevel = LogConf.Level
 	LogLevel.SetLevel(zap.InfoLevel)
-	Logger = zap.New(
-		zap.NewTextEncoder(zap.TextTimeFormat(time.RFC3339)),
-		LogLevel,
-	)
+	logger, _ = LogConf.Build()
 }

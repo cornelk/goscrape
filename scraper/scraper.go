@@ -7,11 +7,10 @@ import (
 	"regexp"
 
 	"github.com/cornelk/goscrape/appcontext"
-
 	"github.com/headzoo/surf"
 	"github.com/headzoo/surf/agent"
 	"github.com/headzoo/surf/browser"
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 )
 
 type (

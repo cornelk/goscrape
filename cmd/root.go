@@ -5,10 +5,9 @@ import (
 
 	"github.com/cornelk/goscrape/appcontext"
 	"github.com/cornelk/goscrape/scraper"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 )
 
 var (
