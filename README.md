@@ -20,6 +20,7 @@ Limitations:
 You need to have Golang installed, otherwise follow the guide at [https://golang.org/doc/install](https://golang.org/doc/install).
 
 ```
+go get github.com/cornelk/goscrape
 go install github.com/cornelk/goscrape
 ```
 
