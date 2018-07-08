@@ -16,6 +16,33 @@ var (
 	PageDirIndex = "index" + PageExtension
 )
 
+func GetPageURL(URL *url.URL) *url.URL {
+	fileName := URL.Path
+
+	// root of domain will be index.html
+	if fileName == "" || fileName == "/" {
+		fileName = PageDirIndex
+		// directory index will be index.html in the directory
+	} else if fileName[len(fileName)-1] == '/' {
+		fileName += PageDirIndex
+	} else {
+		ext := filepath.Ext(fileName)
+		// if file extension is missing add .html
+		if ext == "" {
+			fileName += PageExtension
+		} else {
+			// replace any other extension with .html
+			if ext != PageExtension {
+				fileName = fileName[:len(fileName)-len(ext)] + PageExtension
+			}
+		}
+	}
+
+	URL.Path = fileName
+
+	return URL
+}
+
 // GetFilePath returns a file path for a URL to store the URL content in
 func (s *Scraper) GetFilePath(URL *url.URL, isAPage bool) string {
 	fileName := URL.Path

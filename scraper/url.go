@@ -34,7 +34,18 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, 
 		resolvedurl = base.ResolveReference(ur)
 		resolvedurl.Path = filepath.Join("_"+ur.Host, resolvedurl.Path)
 	} else {
-		resolvedurl = base.ResolveReference(ur)
+		if linkIsAPage {
+			resolvedurl = base.ResolveReference(GetPageURL(ur))
+		} else {
+			resolvedurl = base.ResolveReference(ur)
+		}
+	}
+
+	if resolvedurl.Host == s.URL.Host {
+		if strings.Contains(resolvedurl.Path, s.URL.Path) {
+			resolvedurl.Path = strings.Replace(resolvedurl.Path, s.URL.Path, "", 1)
+			relativeToRoot = ""
+		}
 	}
 
 	resolvedurl.Host = ""   // remove host
