@@ -235,6 +235,10 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor a
 }
 
 func (s *Scraper) isURLExcluded(URL *url.URL) bool {
+	if URL.Scheme == "data" {
+		return true
+	}
+
 	for _, re := range s.excludes {
 		if re.MatchString(URL.Path) {
 			s.log.Info("Skipping URL", zap.Stringer("URL", URL), zap.Stringer("Excluder", re))
