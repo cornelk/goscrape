@@ -81,7 +81,7 @@ func (s *Scraper) urlRelativeToRoot(URL *url.URL) string {
 	var rel string
 	splits := strings.Split(URL.Path, "/")
 	for i := range splits {
-		if len(splits[i]) > 0 {
+		if (len(splits[i]) > 0) && (i < len(splits)-1) {
 			rel += "../"
 		}
 	}
