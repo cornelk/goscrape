@@ -3,6 +3,7 @@ package scraper
 import (
 	"io"
 	"net/url"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"go.uber.org/zap"
@@ -38,6 +39,10 @@ func (s *Scraper) fixFileReferences(URL *url.URL, buf io.Reader) (string, error)
 func (s *Scraper) fixQuerySelection(URL *url.URL, attribute string, selection *goquery.Selection, linkIsAPage bool, relativeToRoot string) {
 	src, ok := selection.Attr(attribute)
 	if !ok {
+		return
+	}
+
+	if strings.HasPrefix(src, "data:") {
 		return
 	}
 
