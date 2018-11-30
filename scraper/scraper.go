@@ -202,7 +202,7 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) bool {
 		return false
 	}
 
-	if !s.isURLIncluded(URL) {
+	if s.includes != nil && !s.isURLIncluded(URL) {
 		return false
 	}
 
@@ -230,7 +230,7 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor a
 		}
 	}
 
-	if !s.isURLIncluded(URL) {
+	if s.includes != nil && !s.isURLIncluded(URL) {
 		return nil
 	}
 
