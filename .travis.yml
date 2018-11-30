@@ -1,12 +1,12 @@
 language: go
 
 go:
-  - 1.7
-  - 1.8
-  - 1.9
+  - 1.9.x
+  - 1.10.x
+  - 1.11.x
 
 script:
-  - go test -coverprofile=coverage.txt -covermode=atomic github.com/cornelk/goscrape/scraper
+  - go test -race -coverprofile=coverage.txt -covermode=atomic github.com/cornelk/goscrape/scraper
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
