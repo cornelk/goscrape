@@ -23,6 +23,7 @@ type (
 		URL             *url.URL
 
 		browser  *browser.Browser
+		includes []*regexp.Regexp
 		excludes []*regexp.Regexp
 		log      *zap.Logger
 
@@ -59,6 +60,21 @@ func New(URL string) (*Scraper, error) {
 		URL:            u,
 	}
 	return s, nil
+}
+
+// SetExcludes sets and checks the exclusions regular expressions
+func (s *Scraper) SetIncludes(includes []string) error {
+	for _, e := range includes {
+		re, err := regexp.Compile(e)
+		if err != nil {
+			return err
+		}
+
+		s.includes = append(s.includes, re)
+		s.log.Debug("Including", zap.Stringer("RE", re))
+	}
+
+	return nil
 }
 
 // SetExcludes sets and checks the exclusions regular expressions
@@ -186,6 +202,10 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) bool {
 		return false
 	}
 
+	if !s.isURLIncluded(URL) {
+		return false
+	}
+
 	if s.isURLExcluded(URL) {
 		return false
 	}
@@ -210,6 +230,10 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor a
 		}
 	}
 
+	if !s.isURLIncluded(URL) {
+		return nil
+	}
+
 	if s.isURLExcluded(URL) {
 		return nil
 	}
@@ -232,6 +256,20 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor a
 	}
 
 	return s.writeFile(filePath, buf)
+}
+
+func (s *Scraper) isURLIncluded(URL *url.URL) bool {
+	if URL.Scheme == "data" {
+		return true
+	}
+
+	for _, re := range s.includes {
+		if re.MatchString(URL.Path) {
+			s.log.Info("Including URL", zap.Stringer("URL", URL), zap.Stringer("Includer", re))
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Scraper) isURLExcluded(URL *url.URL) bool {
