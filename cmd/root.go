@@ -15,6 +15,7 @@ var (
 
 	// program parameters
 	depth        uint
+	includes     []string
 	excludes     []string
 	output       string
 	imageQuality uint
@@ -40,6 +41,7 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goscrape.yaml)")
 
+	RootCmd.Flags().StringArrayVarP(&includes, "include", "n", nil, "only include URLs with PERL Regular Expressions support")
 	RootCmd.Flags().StringArrayVarP(&excludes, "exclude", "x", nil, "exclude URLs with PERL Regular Expressions support")
 	RootCmd.Flags().StringVarP(&output, "output", "o", "", "output directory to write files to")
 	RootCmd.Flags().UintVarP(&imageQuality, "imagequality", "i", 0, "image quality, 0 to disable reencoding")
@@ -75,6 +77,11 @@ func startScraper(cmd *cobra.Command, args []string) {
 		sc, err := scraper.New(url)
 		if err != nil {
 			log.Fatal("Initializing scraper failed", zap.Error(err))
+		}
+
+		err = sc.SetIncludes(includes)
+		if err != nil {
+			log.Fatal("Configuring includes failed", zap.Error(err))
 		}
 
 		err = sc.SetExcludes(excludes)
