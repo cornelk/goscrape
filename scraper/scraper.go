@@ -62,7 +62,7 @@ func New(URL string) (*Scraper, error) {
 	return s, nil
 }
 
-// SetExcludes sets and checks the exclusions regular expressions
+// SetIncludes sets and checks the inclusion regular expressions.
 func (s *Scraper) SetIncludes(includes []string) error {
 	for _, e := range includes {
 		re, err := regexp.Compile(e)
@@ -77,7 +77,7 @@ func (s *Scraper) SetIncludes(includes []string) error {
 	return nil
 }
 
-// SetExcludes sets and checks the exclusions regular expressions
+// SetExcludes sets and checks the exclusions regular expressions.
 func (s *Scraper) SetExcludes(excludes []string) error {
 	for _, e := range excludes {
 		re, err := regexp.Compile(e)
@@ -202,11 +202,10 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) bool {
 		return false
 	}
 
-	if !s.isURLIncluded(URL) {
+	if s.includes != nil && !s.isURLIncluded(URL) {
 		return false
 	}
-
-	if s.isURLExcluded(URL) {
+	if s.excludes != nil && s.isURLExcluded(URL) {
 		return false
 	}
 
@@ -230,11 +229,10 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor a
 		}
 	}
 
-	if !s.isURLIncluded(URL) {
+	if s.includes != nil && !s.isURLIncluded(URL) {
 		return nil
 	}
-
-	if s.isURLExcluded(URL) {
+	if s.excludes != nil && s.isURLExcluded(URL) {
 		return nil
 	}
 

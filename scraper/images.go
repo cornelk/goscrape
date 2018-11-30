@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -56,7 +57,7 @@ func (s *Scraper) encodeJPEG(img image.Image) *bytes.Buffer {
 }
 
 // recodeJPEG recodes the image and returns it if it is smaller than before
-func (s *Scraper) recodeJPEG(URL *url.URL, b []byte) *bytes.Buffer {
+func (s *Scraper) recodeJPEG(URL fmt.Stringer, b []byte) *bytes.Buffer {
 	inBuf := bytes.NewBuffer(b)
 	img, err := jpeg.Decode(inBuf)
 	if err != nil {
@@ -73,7 +74,7 @@ func (s *Scraper) recodeJPEG(URL *url.URL, b []byte) *bytes.Buffer {
 }
 
 // recodePNG recodes the image and returns it if it is smaller than before
-func (s *Scraper) recodePNG(URL *url.URL, b []byte) *bytes.Buffer {
+func (s *Scraper) recodePNG(URL fmt.Stringer, b []byte) *bytes.Buffer {
 	inBuf := bytes.NewBuffer(b)
 	img, err := png.Decode(inBuf)
 	if err != nil {
