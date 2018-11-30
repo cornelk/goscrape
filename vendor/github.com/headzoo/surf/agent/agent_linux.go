@@ -1,6 +1,4 @@
 // +build linux
-// +build !appengine
-// +build !arm
 
 package agent
 

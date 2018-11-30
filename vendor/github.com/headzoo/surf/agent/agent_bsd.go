@@ -1,5 +1,4 @@
 // +build darwin dragonfly freebsd netbsd openbsd
-// +build !appengine
 
 package agent
 

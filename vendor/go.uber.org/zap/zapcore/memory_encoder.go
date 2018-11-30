@@ -43,7 +43,7 @@ func NewMapObjectEncoder() *MapObjectEncoder {
 
 // AddArray implements ObjectEncoder.
 func (m *MapObjectEncoder) AddArray(key string, v ArrayMarshaler) error {
-	arr := &sliceArrayEncoder{}
+	arr := &sliceArrayEncoder{elems: make([]interface{}, 0)}
 	err := v.MarshalLogArray(arr)
 	m.cur[key] = arr.elems
 	return err
@@ -60,7 +60,7 @@ func (m *MapObjectEncoder) AddObject(k string, v ObjectMarshaler) error {
 func (m *MapObjectEncoder) AddBinary(k string, v []byte) { m.cur[k] = v }
 
 // AddByteString implements ObjectEncoder.
-func (m *MapObjectEncoder) AddByteString(k string, v []byte) { m.cur[k] = v }
+func (m *MapObjectEncoder) AddByteString(k string, v []byte) { m.cur[k] = string(v) }
 
 // AddBool implements ObjectEncoder.
 func (m *MapObjectEncoder) AddBool(k string, v bool) { m.cur[k] = v }
