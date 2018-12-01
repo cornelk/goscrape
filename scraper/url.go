@@ -28,7 +28,7 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, 
 	var resolvedurl *url.URL
 	if ur.Host != "" && ur.Host != s.URL.Host {
 		if linkIsAPage { // do not change links to external websites
-			return ""
+			return reference
 		}
 
 		resolvedurl = base.ResolveReference(ur)

@@ -192,6 +192,9 @@ func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) bool {
 	}
 
 	if _, ok := s.pages[p]; ok { // was already downloaded or checked
+		if URL.Fragment != "" {
+			return false
+		}
 		s.log.Debug("Skipping already checked page", zap.Stringer("URL", URL))
 		return false
 	}
