@@ -28,7 +28,7 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, 
 	var resolvedurl *url.URL
 	if ur.Host != "" && ur.Host != s.URL.Host {
 		if linkIsAPage { // do not change links to external websites
-			return ""
+			return reference
 		}
 
 		resolvedurl = base.ResolveReference(ur)
@@ -42,8 +42,8 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, 
 	}
 
 	if resolvedurl.Host == s.URL.Host {
-		if strings.Contains(resolvedurl.Path, s.URL.Path) {
-			resolvedurl.Path = strings.Replace(resolvedurl.Path, s.URL.Path, "", 1)
+		if strings.Contains(resolvedurl.Path, base.Path) {
+			resolvedurl.Path = strings.Replace(resolvedurl.Path, base.Path, "", 1)
 			relativeToRoot = ""
 		}
 	}
