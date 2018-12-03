@@ -2,11 +2,12 @@ package scraper
 
 import (
 	"bytes"
+	"fmt"
 	"net/url"
+	"path"
 	"regexp"
 	"strings"
 
-	"fmt"
 	"github.com/gorilla/css/scanner"
 	"github.com/headzoo/surf/browser"
 	"go.uber.org/zap"
@@ -45,10 +46,13 @@ func (s *Scraper) checkCSSForURLs(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 		}
 		u = URL.ResolveReference(u)
 
+		cssPath := *URL
+		cssPath.Path = path.Dir(cssPath.Path) + "/"
+
 		img := browser.NewImageAsset(u, "", "", "")
 		s.imagesQueue = append(s.imagesQueue, &img.DownloadableAsset)
 
-		resolved := s.resolveURL(u, src, false, "")
+		resolved := s.resolveURL(&cssPath, src, false, "")
 		replacings[token.Value] = resolved
 	}
 

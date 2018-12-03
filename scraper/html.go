@@ -45,6 +45,9 @@ func (s *Scraper) fixQuerySelection(URL *url.URL, attribute string, selection *g
 	if strings.HasPrefix(src, "data:") {
 		return
 	}
+	if strings.HasPrefix(src, "mailto:") {
+		return
+	}
 
 	resolved := s.resolveURL(URL, src, linkIsAPage, relativeToRoot)
 	if src == resolved { // nothing changed

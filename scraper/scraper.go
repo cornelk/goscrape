@@ -181,6 +181,9 @@ func (s *Scraper) downloadReferences() error {
 
 // checkPageURL checks if a page should be downloaded
 func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) bool {
+	if URL.Scheme == "mailto" {
+		return false
+	}
 	if URL.Host != s.URL.Host {
 		s.log.Debug("Skipping external host page", zap.Stringer("URL", URL))
 		return false
