@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"net/url"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -42,10 +43,8 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, 
 	}
 
 	if resolvedurl.Host == s.URL.Host {
-		if strings.Contains(resolvedurl.Path, base.Path) {
-			resolvedurl.Path = strings.Replace(resolvedurl.Path, base.Path, "", 1)
-			relativeToRoot = ""
-		}
+		resolvedurl.Path = urlRelativeToOther(resolvedurl, base)
+		relativeToRoot = ""
 	}
 
 	resolvedurl.Host = ""   // remove host
@@ -86,4 +85,40 @@ func (s *Scraper) urlRelativeToRoot(URL *url.URL) string {
 		}
 	}
 	return rel
+}
+
+func urlRelativeToOther(src, base *url.URL) string {
+	srcSplits := strings.Split(src.Path, "/")
+	baseSplits := strings.Split(base.Path, "/")
+
+	for {
+		if len(srcSplits) == 0 || len(baseSplits) == 0 {
+			break
+		}
+		if len(srcSplits[0]) == 0 {
+			srcSplits = srcSplits[1:]
+			continue
+		}
+		if len(baseSplits[0]) == 0 {
+			baseSplits = baseSplits[1:]
+			continue
+		}
+
+		if srcSplits[0] == baseSplits[0] {
+			srcSplits = srcSplits[1:]
+			baseSplits = baseSplits[1:]
+		} else {
+			break
+		}
+	}
+
+	var upLevels string
+	for _, split := range baseSplits {
+		if split == "" {
+			continue
+		}
+		upLevels += "../"
+	}
+
+	return upLevels + path.Join(srcSplits...)
 }
