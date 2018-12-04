@@ -46,6 +46,7 @@ func (s *Scraper) checkCSSForURLs(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 		}
 		u = URL.ResolveReference(u)
 
+		// Create new URL object and a pointer to it.
 		cssPath := *URL
 		cssPath.Path = path.Dir(cssPath.Path) + "/"
 
