@@ -29,3 +29,28 @@ func Test_urlRelativeToOther(t *testing.T) {
 		}
 	}
 }
+
+func Test_urlRelativeToRoot(t *testing.T) {
+	s, err := New("http://localhost")
+	if err != nil {
+		t.Errorf("Scraper New failed: %v", err)
+	}
+	type urlFixture struct {
+		SrcURL   url.URL
+		Expected string
+	}
+
+	var fixtures = []urlFixture{
+		{url.URL{Path: "/earth/brasil/rio/cat.jpg"}, "../../../"},
+		{url.URL{Path: "cat.jpg"}, ""},
+		{url.URL{Path: "/earth/argentina"}, "../"},
+		{url.URL{Path: "///earth//////cat.jpg"}, "../"},
+	}
+
+	for _, fix := range fixtures {
+		relativeURL := s.urlRelativeToRoot(&fix.SrcURL)
+		if relativeURL != fix.Expected {
+			t.Errorf("URL %s should have gotten relative root path %s but was %s", fix.SrcURL.Path, fix.Expected, relativeURL)
+		}
+	}
+}
