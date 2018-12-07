@@ -5,6 +5,49 @@ import (
 	"testing"
 )
 
+func Test_resonveURL(t *testing.T) {
+	s, err := New("https://petpic.xyz/earth/")
+	if err != nil {
+		t.Errorf("Scraper New failed: %v", err)
+	}
+
+	type filePathFixture struct {
+		BaseURL        url.URL
+		Reference      string
+		IsPage         bool
+		RelativeToRoot string
+		Resolved       string
+	}
+
+	pathlessURL := url.URL{
+		Scheme: "https",
+		Host:   "petpic.xyz",
+		Path:   "",
+	}
+
+	URL := url.URL{
+		Scheme: "https",
+		Host:   "petpic.xyz",
+		Path:   "/earth/",
+	}
+
+	var fixtures = []filePathFixture{
+		{pathlessURL, "", true, "", "index.html"},
+		{pathlessURL, "#contents", true, "", "index.html#contents"},
+		{URL, "brasil/index.html", true, "", "brasil/index.html"},
+		{URL, "brasil/rio/index.html", true, "", "brasil/rio/index.html"},
+		{URL, "../argentina/cat.jpg", false, "", "../argentina/cat.jpg"},
+	}
+
+	for _, fix := range fixtures {
+		resolved := s.resolveURL(&fix.BaseURL, fix.Reference, fix.IsPage, fix.RelativeToRoot)
+
+		if resolved != fix.Resolved {
+			t.Errorf("Reference %s should be resolved to %s but was %s", fix.Reference, fix.Resolved, resolved)
+		}
+	}
+}
+
 func Test_urlRelativeToOther(t *testing.T) {
 
 	type filePathFixture struct {
