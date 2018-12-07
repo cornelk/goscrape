@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_resonveURL(t *testing.T) {
+func Test_resolveURL(t *testing.T) {
 	s, err := New("https://petpic.xyz/earth/")
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)
