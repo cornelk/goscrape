@@ -89,7 +89,7 @@ func (s *Scraper) urlRelativeToRoot(URL *url.URL) string {
 
 func urlRelativeToOther(src, base *url.URL) string {
 	srcSplits := strings.Split(src.Path, "/")
-	baseSplits := strings.Split(base.Path, "/")
+	baseSplits := strings.Split(GetPageURL(base).Path, "/")
 
 	for {
 		if len(srcSplits) == 0 || len(baseSplits) == 0 {
@@ -113,9 +113,13 @@ func urlRelativeToOther(src, base *url.URL) string {
 	}
 
 	var upLevels string
-	for _, split := range baseSplits {
+	for i, split := range baseSplits {
 		if split == "" {
 			continue
+		}
+		// Page filename is not a level.
+		if i == len(baseSplits)-1 {
+			break
 		}
 		upLevels += "../"
 	}
