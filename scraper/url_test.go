@@ -33,7 +33,7 @@ func Test_resolveURL(t *testing.T) {
 
 	var fixtures = []filePathFixture{
 		{pathlessURL, "", true, "", "index.html"},
-		{pathlessURL, "#contents", true, "", "index.html#contents"},
+		{pathlessURL, "#contents", true, "", "#contents"},
 		{URL, "brasil/index.html", true, "", "brasil/index.html"},
 		{URL, "brasil/rio/index.html", true, "", "brasil/rio/index.html"},
 		{URL, "../argentina/cat.jpg", false, "", "../argentina/cat.jpg"},
@@ -57,7 +57,7 @@ func Test_urlRelativeToOther(t *testing.T) {
 	}
 
 	var fixtures = []filePathFixture{
-		{url.URL{Path: "/earth/brasil/rio/cat.jpg"}, url.URL{Path: "/earth/brasil/rio"}, "cat.jpg"},
+		{url.URL{Path: "/earth/brasil/rio/cat.jpg"}, url.URL{Path: "/earth/brasil/rio/"}, "cat.jpg"},
 		{url.URL{Path: "/earth/brasil/rio/cat.jpg"}, url.URL{Path: "/earth/"}, "brasil/rio/cat.jpg"},
 		{url.URL{Path: "/earth/cat.jpg"}, url.URL{Path: "/earth/brasil/rio/"}, "../../cat.jpg"},
 		{url.URL{Path: "/earth/argentina/cat.jpg"}, url.URL{Path: "/earth/brasil/rio/"}, "../../argentina/cat.jpg"},
@@ -68,7 +68,7 @@ func Test_urlRelativeToOther(t *testing.T) {
 	for _, fix := range fixtures {
 		relativeURL := urlRelativeToOther(&fix.SrcURL, &fix.BaseURL)
 		if relativeURL != fix.ExpectedSrcPath {
-			t.Errorf("URL %s should have become %s but was %s", fix.SrcURL.Path, fix.BaseURL.Path, relativeURL)
+			t.Errorf("URL %s should have become %s but was %s", fix.SrcURL.Path, fix.ExpectedSrcPath, relativeURL)
 		}
 	}
 }
