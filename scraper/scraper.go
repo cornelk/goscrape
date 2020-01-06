@@ -38,8 +38,8 @@ type (
 )
 
 // New creates a new Scraper instance
-func New(URL string) (*Scraper, error) {
-	u, err := url.Parse(URL)
+func New(startURL string) (*Scraper, error) {
+	u, err := url.Parse(startURL)
 	if err != nil {
 		return nil, err
 	}
@@ -108,9 +108,9 @@ func (s *Scraper) Start() error {
 	return s.scrapeURL(s.URL, 0)
 }
 
-func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
-	s.log.Info("Downloading", zap.Stringer("URL", URL))
-	if err := s.browser.Open(URL.String()); err != nil {
+func (s *Scraper) scrapeURL(u *url.URL, currentDepth uint) error {
+	s.log.Info("Downloading", zap.Stringer("URL", u))
+	if err := s.browser.Open(u.String()); err != nil {
 		return err
 	}
 
@@ -120,17 +120,17 @@ func (s *Scraper) scrapeURL(URL *url.URL, currentDepth uint) error {
 	}
 
 	if currentDepth == 0 {
-		URL = s.browser.Url() // use the URL that the website returned as new base url for the scrape, in case of a redirect
-		s.URL = URL
+		u = s.browser.Url() // use the URL that the website returned as new base url for the scrape, in case of a redirect
+		s.URL = u
 	}
 
-	html, err := s.fixFileReferences(URL, buf)
+	html, err := s.fixFileReferences(u, buf)
 	if err != nil {
 		return err
 	}
 
 	buf = bytes.NewBufferString(html)
-	filePath := s.GetFilePath(URL, true)
+	filePath := s.GetFilePath(u, true)
 	// always update html files, content might have changed
 	if err = s.writeFile(filePath, buf); err != nil {
 		return err
@@ -161,7 +161,7 @@ func (s *Scraper) downloadReferences() error {
 		s.imagesQueue = append(s.imagesQueue, &image.DownloadableAsset)
 	}
 	for _, stylesheet := range s.browser.Stylesheets() {
-		if err := s.downloadAssetURL(&stylesheet.DownloadableAsset, s.checkCSSForURLs); err != nil {
+		if err := s.downloadAssetURL(&stylesheet.DownloadableAsset, s.checkCSSForUrls); err != nil {
 			return err
 		}
 	}
@@ -180,42 +180,42 @@ func (s *Scraper) downloadReferences() error {
 }
 
 // checkPageURL checks if a page should be downloaded
-func (s *Scraper) checkPageURL(URL *url.URL, currentDepth uint) bool {
-	if URL.Scheme == "mailto" {
+func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
+	if url.Scheme == "mailto" {
 		return false
 	}
-	if URL.Host != s.URL.Host {
-		s.log.Debug("Skipping external host page", zap.Stringer("URL", URL))
+	if url.Host != s.URL.Host {
+		s.log.Debug("Skipping external host page", zap.Stringer("URL", url))
 		return false
 	}
 
-	p := URL.Path
+	p := url.Path
 	if p == "" {
 		p = "/"
 	}
 
 	if _, ok := s.pages[p]; ok { // was already downloaded or checked
-		if URL.Fragment != "" {
+		if url.Fragment != "" {
 			return false
 		}
-		s.log.Debug("Skipping already checked page", zap.Stringer("URL", URL))
+		s.log.Debug("Skipping already checked page", zap.Stringer("URL", url))
 		return false
 	}
 
 	s.pages[p] = false
 	if s.MaxDepth != 0 && currentDepth == s.MaxDepth {
-		s.log.Debug("Skipping too deep level page", zap.Stringer("URL", URL))
+		s.log.Debug("Skipping too deep level page", zap.Stringer("URL", url))
 		return false
 	}
 
-	if s.includes != nil && !s.isURLIncluded(URL) {
+	if s.includes != nil && !s.isURLIncluded(url) {
 		return false
 	}
-	if s.excludes != nil && s.isURLExcluded(URL) {
+	if s.excludes != nil && s.isURLExcluded(url) {
 		return false
 	}
 
-	s.log.Debug("New page to queue", zap.Stringer("URL", URL))
+	s.log.Debug("New page to queue", zap.Stringer("URL", url))
 	return true
 }
 
@@ -229,10 +229,8 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor a
 		}
 
 		s.assets[URL.Path] = false
-	} else {
-		if s.isExternalFileChecked(URL) {
-			return nil
-		}
+	} else if s.isExternalFileChecked(URL) {
+		return nil
 	}
 
 	if s.includes != nil && !s.isURLIncluded(URL) {
@@ -262,46 +260,50 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor a
 	return s.writeFile(filePath, buf)
 }
 
-func (s *Scraper) isURLIncluded(URL *url.URL) bool {
-	if URL.Scheme == "data" {
+func (s *Scraper) isURLIncluded(url *url.URL) bool {
+	if url.Scheme == "data" {
 		return true
 	}
 
 	for _, re := range s.includes {
-		if re.MatchString(URL.Path) {
-			s.log.Info("Including URL", zap.Stringer("URL", URL), zap.Stringer("Includer", re))
+		if re.MatchString(url.Path) {
+			s.log.Info("Including URL",
+				zap.Stringer("URL", url),
+				zap.Stringer("Included", re))
 			return true
 		}
 	}
 	return false
 }
 
-func (s *Scraper) isURLExcluded(URL *url.URL) bool {
-	if URL.Scheme == "data" {
+func (s *Scraper) isURLExcluded(url *url.URL) bool {
+	if url.Scheme == "data" {
 		return true
 	}
 
 	for _, re := range s.excludes {
-		if re.MatchString(URL.Path) {
-			s.log.Info("Skipping URL", zap.Stringer("URL", URL), zap.Stringer("Excluder", re))
+		if re.MatchString(url.Path) {
+			s.log.Info("Skipping URL",
+				zap.Stringer("URL", url),
+				zap.Stringer("Excluded", re))
 			return true
 		}
 	}
 	return false
 }
 
-func (s *Scraper) isExternalFileChecked(URL *url.URL) bool {
-	if URL.Host == s.URL.Host {
+func (s *Scraper) isExternalFileChecked(url *url.URL) bool {
+	if url.Host == s.URL.Host {
 		return false
 	}
 
-	fullURL := URL.String()
+	fullURL := url.String()
 	if _, ok := s.assetsExternal[fullURL]; ok { // was already downloaded or checked
 		return true
 	}
 
 	s.assetsExternal[fullURL] = true
-	s.log.Info("External URL", zap.Stringer("URL", URL))
+	s.log.Info("External URL", zap.Stringer("URL", url))
 
 	return false
 }

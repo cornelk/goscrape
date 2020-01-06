@@ -49,7 +49,6 @@ func Test_resolveURL(t *testing.T) {
 }
 
 func Test_urlRelativeToOther(t *testing.T) {
-
 	type filePathFixture struct {
 		SrcURL          url.URL
 		BaseURL         url.URL

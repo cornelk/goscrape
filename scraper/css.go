@@ -15,8 +15,8 @@ import (
 
 var cssURLRe = regexp.MustCompile(`^url\(['"]?(.*?)['"]?\)$`)
 
-func (s *Scraper) checkCSSForURLs(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer {
-	replacings := make(map[string]string)
+func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer {
+	m := make(map[string]string)
 	str := buf.String()
 	css := scanner.New(str)
 
@@ -44,25 +44,25 @@ func (s *Scraper) checkCSSForURLs(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 		if err != nil {
 			return buf
 		}
-		u = URL.ResolveReference(u)
+		u = url.ResolveReference(u)
 
 		// Create new URL object and a pointer to it.
-		cssPath := *URL
+		cssPath := *url
 		cssPath.Path = path.Dir(cssPath.Path) + "/"
 
 		img := browser.NewImageAsset(u, "", "", "")
 		s.imagesQueue = append(s.imagesQueue, &img.DownloadableAsset)
 
 		resolved := s.resolveURL(&cssPath, src, false, "")
-		replacings[token.Value] = resolved
+		m[token.Value] = resolved
 	}
 
-	if len(replacings) == 0 {
+	if len(m) == 0 {
 		return buf
 	}
 
-	for ori, fpath := range replacings {
-		fixed := fmt.Sprintf("url(%s)", fpath)
+	for ori, filePath := range m {
+		fixed := fmt.Sprintf("url(%s)", filePath)
 		str = strings.Replace(str, ori, fixed, -1)
 		s.log.Debug("CSS Element relinked", zap.String("URL", ori), zap.String("Fixed", fixed))
 	}

@@ -27,7 +27,7 @@ func TestCheckCSSForURLs(t *testing.T) {
 	for input, expected := range fixtures {
 		s.imagesQueue = nil
 		buf := bytes.NewBufferString(input)
-		s.checkCSSForURLs(u, buf)
+		s.checkCSSForUrls(u, buf)
 
 		if expected == "" {
 			if len(s.imagesQueue) != 0 {

@@ -16,8 +16,9 @@ var (
 	PageDirIndex = "index" + PageExtension
 )
 
-func GetPageURL(URL *url.URL) *url.URL {
-	fileName := URL.Path
+// GetPageFilePath returns a filename for a URL that represents a page.
+func GetPageFilePath(url *url.URL) string {
+	fileName := url.Path
 
 	// root of domain will be index.html
 	if fileName == "" || fileName == "/" {
@@ -30,46 +31,24 @@ func GetPageURL(URL *url.URL) *url.URL {
 		// if file extension is missing add .html
 		if ext == "" {
 			fileName += PageExtension
-		} else {
-			// replace any other extension with .html
-			if ext != PageExtension {
-				fileName = fileName[:len(fileName)-len(ext)] + PageExtension
-			}
+		} else if ext != PageExtension { // replace any other extension with .html
+			fileName = fileName[:len(fileName)-len(ext)] + PageExtension
 		}
 	}
 
-	URL.Path = fileName
-
-	return URL
+	return fileName
 }
 
 // GetFilePath returns a file path for a URL to store the URL content in
-func (s *Scraper) GetFilePath(URL *url.URL, isAPage bool) string {
-	fileName := URL.Path
+func (s *Scraper) GetFilePath(url *url.URL, isAPage bool) string {
+	fileName := url.Path
 	if isAPage {
-		// root of domain will be index.html
-		if fileName == "" || fileName == "/" {
-			fileName = PageDirIndex
-			// directory index will be index.html in the directory
-		} else if fileName[len(fileName)-1] == '/' {
-			fileName += PageDirIndex
-		} else {
-			ext := filepath.Ext(fileName)
-			// if file extension is missing add .html
-			if ext == "" {
-				fileName += PageExtension
-			} else {
-				// replace any other extension with .html
-				if ext != PageExtension {
-					fileName = fileName[:len(fileName)-len(ext)] + PageExtension
-				}
-			}
-		}
+		fileName = GetPageFilePath(url)
 	}
 
 	var externalHost string
-	if URL.Host != s.URL.Host {
-		externalHost = "_" + URL.Host // _ is a prefix for external domains on the filesystem
+	if url.Host != s.URL.Host {
+		externalHost = "_" + url.Host // _ is a prefix for external domains on the filesystem
 	}
 
 	return filepath.Join(s.OutputDirectory, s.URL.Host, externalHost, fileName)

@@ -26,30 +26,31 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, 
 		return ""
 	}
 
-	var resolvedurl *url.URL
+	var resolvedURL *url.URL
 	if ur.Host != "" && ur.Host != s.URL.Host {
 		if linkIsAPage { // do not change links to external websites
 			return reference
 		}
 
-		resolvedurl = base.ResolveReference(ur)
-		resolvedurl.Path = filepath.Join("_"+ur.Host, resolvedurl.Path)
+		resolvedURL = base.ResolveReference(ur)
+		resolvedURL.Path = filepath.Join("_"+ur.Host, resolvedURL.Path)
 	} else {
 		if linkIsAPage {
-			resolvedurl = base.ResolveReference(GetPageURL(ur))
+			ur.Path = GetPageFilePath(ur)
+			resolvedURL = base.ResolveReference(ur)
 		} else {
-			resolvedurl = base.ResolveReference(ur)
+			resolvedURL = base.ResolveReference(ur)
 		}
 	}
 
-	if resolvedurl.Host == s.URL.Host {
-		resolvedurl.Path = urlRelativeToOther(resolvedurl, base)
+	if resolvedURL.Host == s.URL.Host {
+		resolvedURL.Path = urlRelativeToOther(resolvedURL, base)
 		relativeToRoot = ""
 	}
 
-	resolvedurl.Host = ""   // remove host
-	resolvedurl.Scheme = "" // remove http/https
-	resolved := resolvedurl.String()
+	resolvedURL.Host = ""   // remove host
+	resolvedURL.Scheme = "" // remove http/https
+	resolved := resolvedURL.String()
 
 	if resolved == "" {
 		resolved = "/" // website root
@@ -76,9 +77,9 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, 
 	return resolved
 }
 
-func (s *Scraper) urlRelativeToRoot(URL *url.URL) string {
+func (s *Scraper) urlRelativeToRoot(url *url.URL) string {
 	var rel string
-	splits := strings.Split(URL.Path, "/")
+	splits := strings.Split(url.Path, "/")
 	for i := range splits {
 		if (len(splits[i]) > 0) && (i < len(splits)-1) {
 			rel += "../"
@@ -89,7 +90,7 @@ func (s *Scraper) urlRelativeToRoot(URL *url.URL) string {
 
 func urlRelativeToOther(src, base *url.URL) string {
 	srcSplits := strings.Split(src.Path, "/")
-	baseSplits := strings.Split(GetPageURL(base).Path, "/")
+	baseSplits := strings.Split(GetPageFilePath(base), "/")
 
 	for {
 		if len(srcSplits) == 0 || len(baseSplits) == 0 {
