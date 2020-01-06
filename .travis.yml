@@ -1,9 +1,9 @@
 language: go
 
 go:
-  - 1.9.x
-  - 1.10.x
   - 1.11.x
+  - 1.12.x
+  - 1.13.x
 
 script:
   - go test -race -coverprofile=coverage.txt -covermode=atomic github.com/cornelk/goscrape/scraper
