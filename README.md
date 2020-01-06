@@ -32,7 +32,7 @@ goscrape http://website.com
 ## Options:
 
 ```
-Scrape a website and create an offline browseable version on the disk
+Scrape a website and create an offline browsable version on the disk
 
 Usage:
   goscrape http://website.com [flags]
