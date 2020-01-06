@@ -2,6 +2,8 @@ package scraper
 
 import (
 	"bytes"
+	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"regexp"
@@ -113,6 +115,9 @@ func (s *Scraper) scrapeURL(u *url.URL, currentDepth uint) error {
 	if err := s.browser.Open(u.String()); err != nil {
 		return err
 	}
+	if c := s.browser.StatusCode(); c != http.StatusOK {
+		return fmt.Errorf("webserver returned http status code %d", c)
+	}
 
 	buf := &bytes.Buffer{}
 	if _, err := s.browser.Download(buf); err != nil {
@@ -181,7 +186,7 @@ func (s *Scraper) downloadReferences() error {
 
 // checkPageURL checks if a page should be downloaded
 func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
-	if url.Scheme == "mailto" {
+	if url.Scheme != "http" && url.Scheme != "https" {
 		return false
 	}
 	if url.Host != s.URL.Host {
