@@ -1,0 +1,12 @@
+run:
+  concurrency: 1
+  deadline: 5m
+
+linters:
+  enable-all: true
+  disable:
+    - gochecknoglobals
+    - gochecknoinits
+    - gomnd
+    - gocognit
+    - wsl
