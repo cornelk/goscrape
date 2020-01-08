@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -15,29 +16,30 @@ import (
 	"go.uber.org/zap"
 )
 
-type (
-	// Scraper contains all scraping data
-	Scraper struct {
-		// Configuration
-		ImageQuality    uint
-		MaxDepth        uint
-		OutputDirectory string
-		URL             *url.URL
+// Scraper contains all scraping data
+type Scraper struct {
+	// Configuration
+	ImageQuality    uint
+	MaxDepth        uint
+	OutputDirectory string
+	Username        string
+	Password        string
 
-		browser  *browser.Browser
-		includes []*regexp.Regexp
-		excludes []*regexp.Regexp
-		log      *zap.Logger
+	URL *url.URL
 
-		assets         map[string]bool
-		imagesQueue    []*browser.DownloadableAsset
-		assetsExternal map[string]bool
-		pages          map[string]bool
-	}
+	browser  *browser.Browser
+	includes []*regexp.Regexp
+	excludes []*regexp.Regexp
+	log      *zap.Logger
 
-	// assetProcessor is a processor of a downloaded asset.
-	assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
-)
+	assets         map[string]bool
+	imagesQueue    []*browser.DownloadableAsset
+	assetsExternal map[string]bool
+	pages          map[string]bool
+}
+
+// assetProcessor is a processor of a downloaded asset.
+type assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 
 // New creates a new Scraper instance
 func New(startURL string) (*Scraper, error) {
@@ -107,6 +109,12 @@ func (s *Scraper) Start() error {
 		p = "/"
 	}
 	s.pages[p] = false
+
+	if s.Username != "" {
+		auth := base64.StdEncoding.EncodeToString([]byte(s.Username + ":" + s.Password))
+		s.browser.AddRequestHeader("Authorization", "Basic "+auth)
+	}
+
 	return s.scrapeURL(s.URL, 0)
 }
 

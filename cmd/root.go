@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/cornelk/goscrape/appcontext"
 	"github.com/cornelk/goscrape/scraper"
@@ -18,6 +19,7 @@ var (
 	includes     []string
 	excludes     []string
 	output       string
+	userParam    string
 	imageQuality uint
 	verbose      bool
 )
@@ -54,6 +56,8 @@ func init() {
 		"download depth, 0 for unlimited")
 	RootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false,
 		"verbose output")
+	RootCmd.Flags().StringVarP(&userParam, "user", "u", "",
+		"user[:password] to use for authentication")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -80,6 +84,15 @@ func startScraper(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	var username, password string
+	if userParam != "" {
+		sl := strings.Split(userParam, ":")
+		username = sl[0]
+		if len(sl) > 1 {
+			password = sl[1]
+		}
+	}
+
 	for _, url := range args {
 		sc, err := scraper.New(url)
 		if err != nil {
@@ -103,6 +116,8 @@ func startScraper(cmd *cobra.Command, args []string) {
 		sc.ImageQuality = imageQuality
 		sc.MaxDepth = depth
 		sc.OutputDirectory = output
+		sc.Username = username
+		sc.Password = password
 
 		log.Info("Scraping", zap.Stringer("URL", sc.URL))
 		err = sc.Start()
