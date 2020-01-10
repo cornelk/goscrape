@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"net/url"
 	"testing"
+
+	"go.uber.org/zap/zaptest"
 )
 
 func TestCheckCSSForURLs(t *testing.T) {
-	s, err := New("http://localhost")
+	logger := zaptest.NewLogger(t)
+	s, err := New(logger, "http://localhost")
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)
 	}

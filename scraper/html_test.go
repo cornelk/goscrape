@@ -1,9 +1,14 @@
 package scraper
 
-import "testing"
+import (
+	"testing"
+
+	"go.uber.org/zap/zaptest"
+)
 
 func TestRemoveAnchor(t *testing.T) {
-	s, err := New("")
+	logger := zaptest.NewLogger(t)
+	s, err := New(logger, "")
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)
 	}

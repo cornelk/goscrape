@@ -9,7 +9,6 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/cornelk/goscrape/appcontext"
 	"github.com/headzoo/surf"
 	"github.com/headzoo/surf/agent"
 	"github.com/headzoo/surf/browser"
@@ -42,7 +41,7 @@ type Scraper struct {
 type assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 
 // New creates a new Scraper instance
-func New(startURL string) (*Scraper, error) {
+func New(logger *zap.Logger, startURL string) (*Scraper, error) {
 	u, err := url.Parse(startURL)
 	if err != nil {
 		return nil, err
@@ -57,7 +56,7 @@ func New(startURL string) (*Scraper, error) {
 
 	s := &Scraper{
 		browser:        b,
-		log:            appcontext.Logger,
+		log:            logger,
 		assets:         make(map[string]bool),
 		assetsExternal: make(map[string]bool),
 		pages:          make(map[string]bool),

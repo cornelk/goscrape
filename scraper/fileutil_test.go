@@ -3,6 +3,8 @@ package scraper
 import (
 	"net/url"
 	"testing"
+
+	"go.uber.org/zap/zaptest"
 )
 
 func TestGetFilePath(t *testing.T) {
@@ -21,8 +23,9 @@ func TestGetFilePath(t *testing.T) {
 		{"https://google.com/", "https://google.com/settings", "google.com/settings.html"},
 	}
 
+	logger := zaptest.NewLogger(t)
 	for _, fix := range fixtures {
-		s, err := New(fix.BaseURL)
+		s, err := New(logger, fix.BaseURL)
 		if err != nil {
 			t.Errorf("Scraper New failed: %v", err)
 		}

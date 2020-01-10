@@ -3,10 +3,13 @@ package scraper
 import (
 	"net/url"
 	"testing"
+
+	"go.uber.org/zap/zaptest"
 )
 
 func Test_resolveURL(t *testing.T) {
-	s, err := New("https://petpic.xyz/earth/")
+	logger := zaptest.NewLogger(t)
+	s, err := New(logger, "https://petpic.xyz/earth/")
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)
 	}
@@ -73,7 +76,8 @@ func Test_urlRelativeToOther(t *testing.T) {
 }
 
 func Test_urlRelativeToRoot(t *testing.T) {
-	s, err := New("http://localhost")
+	logger := zaptest.NewLogger(t)
+	s, err := New(logger, "http://localhost")
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)
 	}
