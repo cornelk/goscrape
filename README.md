@@ -15,21 +15,20 @@ Features and advantages over existing tools like wget, httrack, Teleport Pro:
 Limitations:
 * No GUI version, console only
 
-## Install:
+## Installation
 
 You need to have Golang installed, otherwise follow the guide at [https://golang.org/doc/install](https://golang.org/doc/install).
 
 ```
 go get github.com/cornelk/goscrape
-go install github.com/cornelk/goscrape
 ```
 
-## Usage:
+## Usage
 ```
 goscrape http://website.com
 ```
 
-## Options:
+## Options
 
 ```
 Scrape a website and create an offline browsable version on the disk
@@ -40,8 +39,21 @@ Usage:
 Flags:
       --config string         config file (default is $HOME/.goscrape.yaml)
   -d, --depth uint            download depth, 0 for unlimited (default 10)
-  -x, --exclude stringArray   exclude URLs with PERL Regular Expressions support. You can use https://regex101.com/ to build them
-  -i, --imagequality uint     image quality, 0 to disable reencoding
+  -x, --exclude stringArray   exclude URLs with PERL Regular Expressions support
+  -h, --help                  help for goscrape
+  -i, --imagequality int      image quality, 0 to disable reencoding
+  -n, --include stringArray   only include URLs with PERL Regular Expressions support
   -o, --output string         output directory to write files to
+  -u, --user string           user[:password] to use for authentication
   -v, --verbose               verbose output
 ```
+
+## Dependencies
+
+- [github.com/gorilla/css](https://github.com/gorilla/css) css file tokenizer
+- [github.com/headzoo/surf](https://github.com/headzoo/surf) virtual web browser
+- [github.com/PuerkitoBio/goquery](https://github.com/PuerkitoBio/goquery) HTML document traversal
+- [github.com/spf13/cobra](https://github.com/spf13/cobra) command line handling
+- [github.com/spf13/viper](https://github.com/spf13/viper) configuration
+- [gopkg.in/h2non/filetype.v1](https://gopkg.in/h2non/filetype.v1) identify image formats
+- [go.uber.org/zap](https://go.uber.org/zap) logging
