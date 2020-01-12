@@ -2,8 +2,9 @@ language: go
 sudo: false
 
 env:
-  - PROJECT=goscrape
-  - PROJECT_REPO=cornelk/goscrape
+  global:
+    - PROJECT=goscrape
+    - PROJECT_REPO=cornelk/goscrape
 
 matrix:
   include:
