@@ -14,15 +14,8 @@ matrix:
   allow_failures:
     - go: tip
 
-before_install:
-  - go get github.com/mitchellh/gox
-
-install:
-  - # skip
-
 script:
   - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
-  - if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -output="${PROJECT}.{{.OS}}.{{.Arch}}" -ldflags "-X main.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
@@ -30,6 +23,9 @@ after_success:
 deploy:
   provider: releases
   skip_cleanup: true
+  script:
+    - go get github.com/mitchellh/gox
+    - if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -output="${PROJECT}.{{.OS}}.{{.Arch}}" -ldflags "-X main.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
   api_key:
     secure: "h+xBXIsfq54v4dylcyqHtWbSRHuMd6qzhM5FsLsDrHdKIj8j50k4Lb9ofBXBbYR9y0nmWC3bdFHGyKVzbWXniyDJTSUzvWP5GwfVRt2xalAcEUctHUFpOXSiEpB3UJSphgoSu1FG07MluyK6f2Sr/9ijFeZxZfr2i/GndV6rjbF6m3Virm15hnK0W7zIkgGFwqFHhTZAOh9+ArX55ZGa8lL6VyG1YKt3WNCxndGUw0uspzRlGfPQknd4t4kt8R7KsNyjXEnXZf2BSjJj4uS0HxLY0vP2zpTlzWFc5w/9JpR+1fFq2tL6OK3sLzoxnvAy+W66W1bTI03ZZLLgBSOKgc0jp3hebcYKPLpebmp/C/Tm6ZxiB0fKGRq6VkCb6+96qQVWjsrxUtEUNLQo6GLq8x8zJ21iVaV3AGLuq2q3fbHJilmAfvnSROlaGx1Ds++ChhP7FjV2tDkVQGpWDjZGUO1DI63id21W6OXEVGEWz5sbVqoDyOtoLCtiHR4JXo9XzHOsdNcu5iAs3XC1bdPeVCG0wwTAbrYEMiS/4dH/RqXtUS4gXSxD9l1ThMiYf4hj6LXCwXXPi6/9n07IrhvNSWwPyLoWMFc8GIfTVZ6Ec9sYv25uMr/EzErNj5w0IxcQrn9jpgEr3NsNLClRqkPx3pm/VItb+4prf2n7lJ4gjl8="
   file:
