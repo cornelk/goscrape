@@ -123,6 +123,10 @@ func (s *Scraper) scrapeURL(u *url.URL, currentDepth uint) error {
 		return err
 	}
 	if c := s.browser.StatusCode(); c != http.StatusOK {
+		s.log.Error("Downloading failed", zap.Stringer("URL", u), zap.Int("http_status_code", c))
+		if c == http.StatusNotFound {
+			return nil // continue scraping
+		}
 		return fmt.Errorf("webserver returned http status code %d", c)
 	}
 
