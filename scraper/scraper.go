@@ -9,27 +9,37 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/headzoo/surf"
 	"github.com/headzoo/surf/agent"
 	"github.com/headzoo/surf/browser"
 	"go.uber.org/zap"
 )
 
-// Scraper contains all scraping data
-type Scraper struct {
-	// Configuration
+// Config contains the scraper configuration.
+type Config struct {
+	URL      string
+	Includes []string
+	Excludes []string
+
 	ImageQuality    uint
 	MaxDepth        uint
 	OutputDirectory string
 	Username        string
 	Password        string
+}
 
+// Scraper contains all scraping data.
+type Scraper struct {
+	config Config
+	log    *zap.Logger
+
+	// Configuration
 	URL *url.URL
 
 	browser  *browser.Browser
 	includes []*regexp.Regexp
 	excludes []*regexp.Regexp
-	log      *zap.Logger
 
 	assets         map[string]bool
 	imagesQueue    []*browser.DownloadableAsset
@@ -40,11 +50,26 @@ type Scraper struct {
 // assetProcessor is a processor of a downloaded asset.
 type assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 
-// New creates a new Scraper instance
-func New(logger *zap.Logger, startURL string) (*Scraper, error) {
-	u, err := url.Parse(startURL)
+// New creates a new Scraper instance.
+func New(logger *zap.Logger, cfg Config) (*Scraper, error) {
+	var errs *multierror.Error
+	u, err := url.Parse(cfg.URL)
 	if err != nil {
-		return nil, err
+		errs = multierror.Append(errs, err)
+	}
+
+	includes, err := compileRegexps(cfg.Includes)
+	if err != nil {
+		errs = multierror.Append(errs, err)
+	}
+
+	excludes, err := compileRegexps(cfg.Excludes)
+	if err != nil {
+		errs = multierror.Append(errs, err)
+	}
+
+	if errs != nil {
+		return nil, errs.ErrorOrNil()
 	}
 
 	if u.Scheme == "" {
@@ -55,50 +80,39 @@ func New(logger *zap.Logger, startURL string) (*Scraper, error) {
 	b.SetUserAgent(agent.GoogleBot())
 
 	s := &Scraper{
+		config: cfg,
+
 		browser:        b,
 		log:            logger,
 		assets:         make(map[string]bool),
 		assetsExternal: make(map[string]bool),
 		pages:          make(map[string]bool),
 		URL:            u,
+		includes:       includes,
+		excludes:       excludes,
 	}
 	return s, nil
 }
 
-// SetIncludes sets and checks the inclusion regular expressions.
-func (s *Scraper) SetIncludes(includes []string) error {
-	for _, e := range includes {
+// compileRegexps compiles the strings to regular expressions.
+func compileRegexps(sl []string) ([]*regexp.Regexp, error) {
+	var errs error
+	var l []*regexp.Regexp
+	for _, e := range sl {
 		re, err := regexp.Compile(e)
-		if err != nil {
-			return err
+		if err == nil {
+			l = append(l, re)
+		} else {
+			errs = multierror.Append(errs, err)
 		}
-
-		s.includes = append(s.includes, re)
-		s.log.Debug("Including", zap.Stringer("RE", re))
 	}
-
-	return nil
-}
-
-// SetExcludes sets and checks the exclusions regular expressions.
-func (s *Scraper) SetExcludes(excludes []string) error {
-	for _, e := range excludes {
-		re, err := regexp.Compile(e)
-		if err != nil {
-			return err
-		}
-
-		s.excludes = append(s.excludes, re)
-		s.log.Debug("Excluding", zap.Stringer("RE", re))
-	}
-
-	return nil
+	return l, errs
 }
 
 // Start starts the scraping
 func (s *Scraper) Start() error {
-	if s.OutputDirectory != "" {
-		if err := os.MkdirAll(s.OutputDirectory, os.ModePerm); err != nil {
+	if s.config.OutputDirectory != "" {
+		if err := os.MkdirAll(s.config.OutputDirectory, os.ModePerm); err != nil {
 			return err
 		}
 	}
@@ -109,8 +123,8 @@ func (s *Scraper) Start() error {
 	}
 	s.pages[p] = false
 
-	if s.Username != "" {
-		auth := base64.StdEncoding.EncodeToString([]byte(s.Username + ":" + s.Password))
+	if s.config.Username != "" {
+		auth := base64.StdEncoding.EncodeToString([]byte(s.config.Username + ":" + s.config.Password))
 		s.browser.AddRequestHeader("Authorization", "Basic "+auth)
 	}
 
@@ -219,7 +233,7 @@ func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
 	}
 
 	s.pages[p] = false
-	if s.MaxDepth != 0 && currentDepth == s.MaxDepth {
+	if s.config.MaxDepth != 0 && currentDepth == s.config.MaxDepth {
 		s.log.Debug("Skipping too deep level page", zap.Stringer("URL", url))
 		return false
 	}

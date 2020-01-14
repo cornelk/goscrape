@@ -9,7 +9,11 @@ import (
 
 func Test_resolveURL(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	s, err := New(logger, "https://petpic.xyz/earth/")
+	cfg := Config{
+		URL: "https://petpic.xyz/earth/",
+	}
+
+	s, err := New(logger, cfg)
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)
 	}
@@ -77,7 +81,10 @@ func Test_urlRelativeToOther(t *testing.T) {
 
 func Test_urlRelativeToRoot(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	s, err := New(logger, "http://localhost")
+	cfg := Config{
+		URL: "https://localhost",
+	}
+	s, err := New(logger, cfg)
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)
 	}

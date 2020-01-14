@@ -23,9 +23,11 @@ func TestGetFilePath(t *testing.T) {
 		{"https://google.com/", "https://google.com/settings", "google.com/settings.html"},
 	}
 
+	var cfg Config
 	logger := zaptest.NewLogger(t)
 	for _, fix := range fixtures {
-		s, err := New(logger, fix.BaseURL)
+		cfg.URL = fix.BaseURL
+		s, err := New(logger, cfg)
 		if err != nil {
 			t.Errorf("Scraper New failed: %v", err)
 		}

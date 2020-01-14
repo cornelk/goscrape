@@ -8,7 +8,7 @@ import (
 
 func TestRemoveAnchor(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	s, err := New(logger, "")
+	s, err := New(logger, Config{})
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)
 	}

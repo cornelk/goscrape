@@ -68,27 +68,22 @@ func startScraper(cmd *cobra.Command, args []string) {
 	depth, _ := cmd.Flags().GetUint("depth")
 
 	logger := logger(cmd)
+	cfg := scraper.Config{
+		Includes:        includes,
+		Excludes:        excludes,
+		ImageQuality:    uint(imageQuality),
+		MaxDepth:        depth,
+		OutputDirectory: output,
+		Username:        username,
+		Password:        password,
+	}
+
 	for _, url := range args {
-		sc, err := scraper.New(logger, url)
+		cfg.URL = url
+		sc, err := scraper.New(logger, cfg)
 		if err != nil {
 			logger.Fatal("Initializing scraper failed", zap.Error(err))
 		}
-
-		err = sc.SetIncludes(includes)
-		if err != nil {
-			logger.Fatal("Configuring includes failed", zap.Error(err))
-		}
-
-		err = sc.SetExcludes(excludes)
-		if err != nil {
-			logger.Fatal("Configuring excludes failed", zap.Error(err))
-		}
-
-		sc.ImageQuality = uint(imageQuality)
-		sc.MaxDepth = depth
-		sc.OutputDirectory = output
-		sc.Username = username
-		sc.Password = password
 
 		logger.Info("Scraping", zap.Stringer("URL", sc.URL))
 		err = sc.Start()

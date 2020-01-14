@@ -10,7 +10,10 @@ import (
 
 func TestCheckCSSForURLs(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	s, err := New(logger, "http://localhost")
+	cfg := Config{
+		URL: "http://localhost",
+	}
+	s, err := New(logger, cfg)
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)
 	}
