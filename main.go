@@ -23,6 +23,7 @@ func main() {
 	rootCmd.Flags().StringP("output", "o", "", "output directory to write files to")
 	rootCmd.Flags().IntP("imagequality", "i", 0, "image quality, 0 to disable reencoding")
 	rootCmd.Flags().UintP("depth", "d", 10, "download depth, 0 for unlimited")
+	rootCmd.Flags().UintP("timeout", "t", 0, "time limit in seconds for each http request to connect and read the request body")
 	rootCmd.Flags().BoolP("verbose", "v", false, "verbose output")
 	rootCmd.Flags().StringP("user", "u", "", "user[:password] to use for authentication")
 
@@ -66,6 +67,7 @@ func startScraper(cmd *cobra.Command, args []string) {
 	}
 	output, _ := cmd.Flags().GetString("output")
 	depth, _ := cmd.Flags().GetUint("depth")
+	timeout, _ := cmd.Flags().GetUint("timeout")
 
 	logger := logger(cmd)
 	cfg := scraper.Config{
@@ -73,6 +75,7 @@ func startScraper(cmd *cobra.Command, args []string) {
 		Excludes:        excludes,
 		ImageQuality:    uint(imageQuality),
 		MaxDepth:        depth,
+		Timeout:         timeout,
 		OutputDirectory: output,
 		Username:        username,
 		Password:        password,

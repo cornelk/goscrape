@@ -46,6 +46,7 @@ Flags:
   -i, --imagequality int      image quality, 0 to disable reencoding
   -n, --include stringArray   only include URLs with PERL Regular Expressions support
   -o, --output string         output directory to write files to
+  -t, --timeout uint          time limit in seconds for each http request to connect and read the request body
   -u, --user string           user[:password] to use for authentication
   -v, --verbose               verbose output
 ```
