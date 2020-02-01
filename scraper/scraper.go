@@ -3,7 +3,6 @@ package scraper
 import (
 	"bytes"
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -132,50 +131,62 @@ func (s *Scraper) Start() error {
 		s.browser.AddRequestHeader("Authorization", "Basic "+auth)
 	}
 
-	return s.scrapeURL(s.URL, 0)
+	s.scrapeURL(s.URL, 0)
+	return nil
 }
 
-func (s *Scraper) scrapeURL(u *url.URL, currentDepth uint) error {
+func (s *Scraper) scrapeURL(u *url.URL, currentDepth uint) {
 	s.log.Info("Downloading", zap.Stringer("URL", u))
 	if err := s.browser.Open(u.String()); err != nil {
-		return err
+		s.log.Error("Request failed",
+			zap.Stringer("URL", u),
+			zap.Error(err))
+		return
 	}
 	if c := s.browser.StatusCode(); c != http.StatusOK {
-		s.log.Error("Downloading failed", zap.Stringer("URL", u), zap.Int("http_status_code", c))
-		if c == http.StatusNotFound {
-			return nil // continue scraping
-		}
-		return fmt.Errorf("webserver returned http status code %d", c)
+		s.log.Error("Request failed",
+			zap.Stringer("URL", u),
+			zap.Int("http_status_code", c))
+		return
 	}
 
 	buf := &bytes.Buffer{}
 	if _, err := s.browser.Download(buf); err != nil {
-		return err
+		s.log.Error("Downloading content failed",
+			zap.Stringer("URL", u),
+			zap.Error(err))
+		return
 	}
 
 	if currentDepth == 0 {
-		u = s.browser.Url() // use the URL that the website returned as new base url for the scrape, in case of a redirect
+		u = s.browser.Url()
+		// use the URL that the website returned as new base url for the
+		// scrape, in case of a redirect it changed
 		s.URL = u
 	}
 
 	html, err := s.fixFileReferences(u, buf)
 	if err != nil {
-		return err
+		s.log.Error("Fixing file references failed",
+			zap.Stringer("URL", u),
+			zap.Error(err))
+	} else {
+		buf = bytes.NewBufferString(html)
+		filePath := s.GetFilePath(u, true)
+		// always update html files, content might have changed
+		if err = s.writeFile(filePath, buf); err != nil {
+			s.log.Error("Writing HTML to file failed",
+				zap.Stringer("URL", u),
+				zap.String("file", filePath),
+				zap.Error(err))
+		}
 	}
 
-	buf = bytes.NewBufferString(html)
-	filePath := s.GetFilePath(u, true)
-	// always update html files, content might have changed
-	if err = s.writeFile(filePath, buf); err != nil {
-		return err
-	}
-
-	if err = s.downloadReferences(); err != nil {
-		return err
-	}
+	s.downloadReferences()
 
 	var toScrape []*url.URL
-	// check first and download afterwards to not hit max depth limit for start page links because of recursive linking
+	// check first and download afterwards to not hit max depth limit for
+	// start page links because of recursive linking
 	for _, link := range s.browser.Links() {
 		if s.checkPageURL(link.URL, currentDepth) {
 			toScrape = append(toScrape, link.URL)
@@ -183,34 +194,24 @@ func (s *Scraper) scrapeURL(u *url.URL, currentDepth uint) error {
 	}
 
 	for _, URL := range toScrape {
-		if err = s.scrapeURL(URL, currentDepth+1); err != nil {
-			return err
-		}
+		s.scrapeURL(URL, currentDepth+1)
 	}
-	return nil
 }
 
-func (s *Scraper) downloadReferences() error {
+func (s *Scraper) downloadReferences() {
 	for _, image := range s.browser.Images() {
 		s.imagesQueue = append(s.imagesQueue, &image.DownloadableAsset)
 	}
 	for _, stylesheet := range s.browser.Stylesheets() {
-		if err := s.downloadAssetURL(&stylesheet.DownloadableAsset, s.checkCSSForUrls); err != nil {
-			return err
-		}
+		s.downloadAssetURL(&stylesheet.DownloadableAsset, s.checkCSSForUrls)
 	}
 	for _, script := range s.browser.Scripts() {
-		if err := s.downloadAssetURL(&script.DownloadableAsset, nil); err != nil {
-			return err
-		}
+		s.downloadAssetURL(&script.DownloadableAsset, nil)
 	}
 	for _, image := range s.imagesQueue {
-		if err := s.downloadAssetURL(image, s.checkImageForRecode); err != nil {
-			return err
-		}
+		s.downloadAssetURL(image, s.checkImageForRecode)
 	}
 	s.imagesQueue = nil
-	return nil
 }
 
 // checkPageURL checks if a page should be downloaded
@@ -254,29 +255,29 @@ func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
 }
 
 // downloadAssetURL downloads an asset if it does not exist on disk yet.
-func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor assetProcessor) error {
+func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor assetProcessor) {
 	URL := asset.URL
 
 	if URL.Host == s.URL.Host {
 		if _, ok := s.assets[URL.Path]; ok { // was already downloaded or checked
-			return nil
+			return
 		}
 
 		s.assets[URL.Path] = false
 	} else if s.isExternalFileChecked(URL) {
-		return nil
+		return
 	}
 
 	if s.includes != nil && !s.isURLIncluded(URL) {
-		return nil
+		return
 	}
 	if s.excludes != nil && s.isURLExcluded(URL) {
-		return nil
+		return
 	}
 
 	filePath := s.GetFilePath(URL, false)
 	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-		return nil
+		return
 	}
 
 	s.log.Info("Downloading", zap.Stringer("URL", URL))
@@ -284,14 +285,22 @@ func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor a
 	buf := &bytes.Buffer{}
 	_, err := asset.Download(buf)
 	if err != nil {
-		return err
+		s.log.Error("Downloading asset failed",
+			zap.Stringer("URL", URL),
+			zap.Error(err))
+		return
 	}
 
 	if processor != nil {
 		buf = processor(URL, buf)
 	}
 
-	return s.writeFile(filePath, buf)
+	if err = s.writeFile(filePath, buf); err != nil {
+		s.log.Error("Writing asset file failed",
+			zap.Stringer("URL", URL),
+			zap.String("file", filePath),
+			zap.Error(err))
+	}
 }
 
 func (s *Scraper) isURLIncluded(url *url.URL) bool {
