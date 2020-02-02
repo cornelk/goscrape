@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"net/url"
 	"path"
-	"regexp"
 	"strings"
 
 	"github.com/gorilla/css/scanner"
 	"github.com/headzoo/surf/browser"
 	"go.uber.org/zap"
 )
-
-var cssURLRe = regexp.MustCompile(`^url\(['"]?(.*?)['"]?\)$`)
 
 func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer {
 	m := make(map[string]string)
@@ -25,12 +22,11 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 		if token.Type == scanner.TokenEOF || token.Type == scanner.TokenError {
 			break
 		}
-
 		if token.Type != scanner.TokenURI {
 			continue
 		}
 
-		match := cssURLRe.FindStringSubmatch(token.Value)
+		match := s.cssURLRe.FindStringSubmatch(token.Value)
 		if match == nil {
 			continue
 		}
@@ -46,13 +42,11 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 		}
 		u = url.ResolveReference(u)
 
-		// Create new URL object and a pointer to it.
-		cssPath := *url
-		cssPath.Path = path.Dir(cssPath.Path) + "/"
-
 		img := browser.NewImageAsset(u, "", "", "")
 		s.imagesQueue = append(s.imagesQueue, &img.DownloadableAsset)
 
+		cssPath := *url
+		cssPath.Path = path.Dir(cssPath.Path) + "/"
 		resolved := s.resolveURL(&cssPath, src, false, "")
 		m[token.Value] = resolved
 	}
@@ -64,7 +58,9 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 	for ori, filePath := range m {
 		fixed := fmt.Sprintf("url(%s)", filePath)
 		str = strings.Replace(str, ori, fixed, -1)
-		s.log.Debug("CSS Element relinked", zap.String("URL", ori), zap.String("Fixed", fixed))
+		s.log.Debug("CSS Element relinked",
+			zap.String("url", ori),
+			zap.String("fixed_url", fixed))
 	}
 
 	return bytes.NewBufferString(str)

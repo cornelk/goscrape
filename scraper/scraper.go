@@ -33,24 +33,20 @@ type Config struct {
 
 // Scraper contains all scraping data.
 type Scraper struct {
-	config Config
-	log    *zap.Logger
+	config  Config
+	log     *zap.Logger
+	URL     *url.URL
+	browser *browser.Browser
 
-	// Configuration
-	URL *url.URL
-
-	browser  *browser.Browser
+	cssURLRe *regexp.Regexp
 	includes []*regexp.Regexp
 	excludes []*regexp.Regexp
 
-	assets         map[string]bool
-	imagesQueue    []*browser.DownloadableAsset
-	assetsExternal map[string]bool
-	pages          map[string]bool
-}
+	// key is the URL of page or asset
+	processed map[string]struct{}
 
-// assetProcessor is a processor of a downloaded asset.
-type assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
+	imagesQueue []*browser.DownloadableAsset
+}
 
 // New creates a new Scraper instance.
 func New(logger *zap.Logger, cfg Config) (*Scraper, error) {
@@ -85,19 +81,19 @@ func New(logger *zap.Logger, cfg Config) (*Scraper, error) {
 	s := &Scraper{
 		config: cfg,
 
-		browser:        b,
-		log:            logger,
-		assets:         make(map[string]bool),
-		assetsExternal: make(map[string]bool),
-		pages:          make(map[string]bool),
-		URL:            u,
-		includes:       includes,
-		excludes:       excludes,
+		browser:   b,
+		log:       logger,
+		processed: make(map[string]struct{}),
+		URL:       u,
+		cssURLRe:  regexp.MustCompile(`^url\(['"]?(.*?)['"]?\)$`),
+		includes:  includes,
+		excludes:  excludes,
 	}
 	return s, nil
 }
 
-// compileRegexps compiles the strings to regular expressions.
+// compileRegexps compiles the given regex strings to regular expressions
+// to be used in the include and exclude filters.
 func compileRegexps(sl []string) ([]*regexp.Regexp, error) {
 	var errs error
 	var l []*regexp.Regexp
@@ -124,18 +120,18 @@ func (s *Scraper) Start() error {
 	if p == "" {
 		p = "/"
 	}
-	s.pages[p] = false
+	s.processed[p] = struct{}{}
 
 	if s.config.Username != "" {
 		auth := base64.StdEncoding.EncodeToString([]byte(s.config.Username + ":" + s.config.Password))
 		s.browser.AddRequestHeader("Authorization", "Basic "+auth)
 	}
 
-	s.scrapeURL(s.URL, 0)
+	s.downloadPage(s.URL, 0)
 	return nil
 }
 
-func (s *Scraper) scrapeURL(u *url.URL, currentDepth uint) {
+func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
 	s.log.Info("Downloading", zap.Stringer("URL", u))
 	if err := s.browser.Open(u.String()); err != nil {
 		s.log.Error("Request failed",
@@ -165,6 +161,25 @@ func (s *Scraper) scrapeURL(u *url.URL, currentDepth uint) {
 		s.URL = u
 	}
 
+	s.storePage(u, buf)
+
+	s.downloadReferences()
+
+	var toScrape []*url.URL
+	// check first and download afterwards to not hit max depth limit for
+	// start page links because of recursive linking
+	for _, link := range s.browser.Links() {
+		if s.checkPageURL(link.URL, currentDepth) {
+			toScrape = append(toScrape, link.URL)
+		}
+	}
+
+	for _, URL := range toScrape {
+		s.downloadPage(URL, currentDepth+1)
+	}
+}
+
+func (s *Scraper) storePage(u *url.URL, buf *bytes.Buffer) {
 	html, err := s.fixFileReferences(u, buf)
 	if err != nil {
 		s.log.Error("Fixing file references failed",
@@ -181,172 +196,4 @@ func (s *Scraper) scrapeURL(u *url.URL, currentDepth uint) {
 				zap.Error(err))
 		}
 	}
-
-	s.downloadReferences()
-
-	var toScrape []*url.URL
-	// check first and download afterwards to not hit max depth limit for
-	// start page links because of recursive linking
-	for _, link := range s.browser.Links() {
-		if s.checkPageURL(link.URL, currentDepth) {
-			toScrape = append(toScrape, link.URL)
-		}
-	}
-
-	for _, URL := range toScrape {
-		s.scrapeURL(URL, currentDepth+1)
-	}
-}
-
-func (s *Scraper) downloadReferences() {
-	for _, image := range s.browser.Images() {
-		s.imagesQueue = append(s.imagesQueue, &image.DownloadableAsset)
-	}
-	for _, stylesheet := range s.browser.Stylesheets() {
-		s.downloadAssetURL(&stylesheet.DownloadableAsset, s.checkCSSForUrls)
-	}
-	for _, script := range s.browser.Scripts() {
-		s.downloadAssetURL(&script.DownloadableAsset, nil)
-	}
-	for _, image := range s.imagesQueue {
-		s.downloadAssetURL(image, s.checkImageForRecode)
-	}
-	s.imagesQueue = nil
-}
-
-// checkPageURL checks if a page should be downloaded
-func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
-	if url.Scheme != "http" && url.Scheme != "https" {
-		return false
-	}
-	if url.Host != s.URL.Host {
-		s.log.Debug("Skipping external host page", zap.Stringer("URL", url))
-		return false
-	}
-
-	p := url.Path
-	if p == "" {
-		p = "/"
-	}
-
-	if _, ok := s.pages[p]; ok { // was already downloaded or checked
-		if url.Fragment != "" {
-			return false
-		}
-		s.log.Debug("Skipping already checked page", zap.Stringer("URL", url))
-		return false
-	}
-
-	s.pages[p] = false
-	if s.config.MaxDepth != 0 && currentDepth == s.config.MaxDepth {
-		s.log.Debug("Skipping too deep level page", zap.Stringer("URL", url))
-		return false
-	}
-
-	if s.includes != nil && !s.isURLIncluded(url) {
-		return false
-	}
-	if s.excludes != nil && s.isURLExcluded(url) {
-		return false
-	}
-
-	s.log.Debug("New page to queue", zap.Stringer("URL", url))
-	return true
-}
-
-// downloadAssetURL downloads an asset if it does not exist on disk yet.
-func (s *Scraper) downloadAssetURL(asset *browser.DownloadableAsset, processor assetProcessor) {
-	URL := asset.URL
-
-	if URL.Host == s.URL.Host {
-		if _, ok := s.assets[URL.Path]; ok { // was already downloaded or checked
-			return
-		}
-
-		s.assets[URL.Path] = false
-	} else if s.isExternalFileChecked(URL) {
-		return
-	}
-
-	if s.includes != nil && !s.isURLIncluded(URL) {
-		return
-	}
-	if s.excludes != nil && s.isURLExcluded(URL) {
-		return
-	}
-
-	filePath := s.GetFilePath(URL, false)
-	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-		return
-	}
-
-	s.log.Info("Downloading", zap.Stringer("URL", URL))
-
-	buf := &bytes.Buffer{}
-	_, err := asset.Download(buf)
-	if err != nil {
-		s.log.Error("Downloading asset failed",
-			zap.Stringer("URL", URL),
-			zap.Error(err))
-		return
-	}
-
-	if processor != nil {
-		buf = processor(URL, buf)
-	}
-
-	if err = s.writeFile(filePath, buf); err != nil {
-		s.log.Error("Writing asset file failed",
-			zap.Stringer("URL", URL),
-			zap.String("file", filePath),
-			zap.Error(err))
-	}
-}
-
-func (s *Scraper) isURLIncluded(url *url.URL) bool {
-	if url.Scheme == "data" {
-		return true
-	}
-
-	for _, re := range s.includes {
-		if re.MatchString(url.Path) {
-			s.log.Info("Including URL",
-				zap.Stringer("URL", url),
-				zap.Stringer("Included", re))
-			return true
-		}
-	}
-	return false
-}
-
-func (s *Scraper) isURLExcluded(url *url.URL) bool {
-	if url.Scheme == "data" {
-		return true
-	}
-
-	for _, re := range s.excludes {
-		if re.MatchString(url.Path) {
-			s.log.Info("Skipping URL",
-				zap.Stringer("URL", url),
-				zap.Stringer("Excluded", re))
-			return true
-		}
-	}
-	return false
-}
-
-func (s *Scraper) isExternalFileChecked(url *url.URL) bool {
-	if url.Host == s.URL.Host {
-		return false
-	}
-
-	fullURL := url.String()
-	if _, ok := s.assetsExternal[fullURL]; ok { // was already downloaded or checked
-		return true
-	}
-
-	s.assetsExternal[fullURL] = true
-	s.log.Info("External URL", zap.Stringer("URL", url))
-
-	return false
 }

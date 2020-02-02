@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
+const (
 	// PageExtension is the file extension that downloaded pages get
 	PageExtension = ".html"
 	// PageDirIndex is the file name of the index file for every dir
