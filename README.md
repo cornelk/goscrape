@@ -54,10 +54,10 @@ Flags:
 ## Dependencies
 
 - [github.com/gorilla/css](https://github.com/gorilla/css) css file tokenizer
+- [github.com/h2non/filetype](https://github.com/h2non/filetype) image format identification
 - [github.com/hashicorp/go-multierror](https://github.com/hashicorp/go-multierror) multi error wrapping
 - [github.com/headzoo/surf](https://github.com/headzoo/surf) virtual web browser
 - [github.com/PuerkitoBio/goquery](https://github.com/PuerkitoBio/goquery) HTML document traversal
 - [github.com/spf13/cobra](https://github.com/spf13/cobra) command line handling
 - [github.com/spf13/viper](https://github.com/spf13/viper) configuration
-- [gopkg.in/h2non/filetype.v1](https://gopkg.in/h2non/filetype.v1) image format identification
 - [go.uber.org/zap](https://go.uber.org/zap) logging
