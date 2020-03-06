@@ -8,10 +8,10 @@ import (
 	"image/png"
 	"net/url"
 
+	"github.com/h2non/filetype"
+	"github.com/h2non/filetype/matchers"
+	"github.com/h2non/filetype/types"
 	"go.uber.org/zap"
-	"gopkg.in/h2non/filetype.v1"
-	"gopkg.in/h2non/filetype.v1/matchers"
-	"gopkg.in/h2non/filetype.v1/types"
 )
 
 func (s *Scraper) checkImageForRecode(url *url.URL, buf *bytes.Buffer) *bytes.Buffer {
