@@ -60,7 +60,7 @@ func startScraper(cmd *cobra.Command, args []string) {
 	}
 
 	includes, _ := cmd.Flags().GetStringArray("include")
-	excludes, _ := cmd.Flags().GetStringArray("excludes")
+	excludes, _ := cmd.Flags().GetStringArray("exclude")
 	imageQuality, _ := cmd.Flags().GetInt("imagequality")
 	if imageQuality < 0 || imageQuality >= 100 {
 		imageQuality = 0
