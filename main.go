@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cornelk/goscrape/scraper"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+
+	"github.com/xdorro/goscrape/scraper"
 )
 
 func main() {
