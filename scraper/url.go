@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// RemoveAnchor removes anchors from URLS
+// RemoveAnchor removes anchors from URLS.
 func (s *Scraper) RemoveAnchor(path string) string {
 	sl := strings.LastIndexByte(path, '/')
 	if sl == -1 {

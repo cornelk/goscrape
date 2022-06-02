@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	// PageExtension is the file extension that downloaded pages get
+	// PageExtension is the file extension that downloaded pages get.
 	PageExtension = ".html"
-	// PageDirIndex is the file name of the index file for every dir
+	// PageDirIndex is the file name of the index file for every dir.
 	PageDirIndex = "index" + PageExtension
 )
 
@@ -21,12 +21,15 @@ func GetPageFilePath(url *url.URL) string {
 	fileName := url.Path
 
 	// root of domain will be index.html
-	if fileName == "" || fileName == "/" {
+	switch {
+	case fileName == "" || fileName == "/":
 		fileName = PageDirIndex
 		// directory index will be index.html in the directory
-	} else if fileName[len(fileName)-1] == '/' {
+
+	case fileName[len(fileName)-1] == '/':
 		fileName += PageDirIndex
-	} else {
+
+	default:
 		ext := filepath.Ext(fileName)
 		// if file extension is missing add .html
 		if ext == "" {
@@ -39,7 +42,7 @@ func GetPageFilePath(url *url.URL) string {
 	return fileName
 }
 
-// GetFilePath returns a file path for a URL to store the URL content in
+// GetFilePath returns a file path for a URL to store the URL content in.
 func (s *Scraper) GetFilePath(url *url.URL, isAPage bool) string {
 	fileName := url.Path
 	if isAPage {

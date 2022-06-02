@@ -1,10 +1,41 @@
 run:
-  concurrency: 1
-  timeout: 5m
+  deadline: 5m
 
 linters:
   enable-all: true
   disable:
-    - gomnd
-    - gocognit
-    - wsl
+    - containedctx # detects struct contained context.Context field
+    - cyclop # checks function and package cyclomatic complexity
+    - exhaustive # check exhaustiveness of enum switch statements
+    - exhaustivestruct # Checks if all struct's fields are initialized
+    - exhaustruct # finds structures with uninitialized fields
+    - forbidigo # Forbids identifiers
+    - gci # control golang package import order and make it always deterministic
+    - gochecknoglobals # check that no global variables exist
+    - gochecknoinits # Checks that no init functions are present in Go code
+    - godox # Tool for detection of FIXME, TODO and other comment keywords
+    - gofumpt # checks whether code was gofumpt-ed
+    - golint # deprecated and replaced by revive
+    - gomnd # An analyzer to detect magic numbers
+    - gomoddirectives # Manage the use of 'replace', 'retract', and 'excludes' directives in go.mod
+    - gosec # Inspects source code for security problems
+    - ifshort # Checks that your code uses short syntax for if-statements whenever possible
+    - interfacer # suggests narrower interface types
+    - ireturn # Accept Interfaces, Return Concrete Types
+    - lll # Reports long lines
+    - maligned # deprecated tool to detect Go structs that would take less memory if their fields were sorted
+    - nlreturn # checks for a new line before return and branch statements to increase code clarity
+    - nonamedreturns # Reports all named returns
+    - paralleltest # detects missing usage of t.Parallel() method in your Go test
+    - scopelint # deprecated and replaced by exportloopref
+    - tagliatelle # checks the struct tags
+    - testpackage # linter that makes you use a separate _test package
+    - varnamelen # checks that the length of a variable's name matches its scope
+    - wrapcheck # Checks that errors returned from external packages are wrapped
+    - wsl # Whitespace Linter - Forces you to use empty lines
+
+issues:
+  exclude-rules:
+    - linters:
+        - goerr113
+      text: "do not define dynamic errors"

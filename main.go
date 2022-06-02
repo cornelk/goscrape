@@ -33,16 +33,7 @@ func main() {
 }
 
 func startScraper(cmd *cobra.Command, args []string) {
-	configFile, err := cmd.Flags().GetString("config")
-	if err == nil && configFile != "" { // enable ability to specify config file via flag
-		viper.SetConfigFile(configFile)
-	}
-
-	viper.SetConfigName(".goscrape") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")     // adding home directory as first search path
-	viper.AutomaticEnv()             // read in environment variables that match
-
-	_ = viper.ReadInConfig()
+	initializeViper(cmd)
 
 	if len(args) == 0 {
 		_ = cmd.Help()
@@ -94,6 +85,19 @@ func startScraper(cmd *cobra.Command, args []string) {
 			logger.Error("Scraping failed", zap.Error(err))
 		}
 	}
+}
+
+func initializeViper(cmd *cobra.Command) {
+	configFile, err := cmd.Flags().GetString("config")
+	if err == nil && configFile != "" { // enable ability to specify config file via flag
+		viper.SetConfigFile(configFile)
+	}
+
+	viper.SetConfigName(".goscrape") // name of config file (without extension)
+	viper.AddConfigPath("$HOME")     // adding home directory as first search path
+	viper.AutomaticEnv()             // read in environment variables that match
+
+	_ = viper.ReadInConfig()
 }
 
 func logger(cmd *cobra.Command) *zap.Logger {
