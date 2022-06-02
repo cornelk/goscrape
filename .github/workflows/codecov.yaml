@@ -1,4 +1,4 @@
-name: CI
+name: codecov
 
 on:
   push:
@@ -7,34 +7,28 @@ on:
   pull_request:
 
 jobs:
-  build:
-    if: "!contains(github.event.commits[0].message, '[skip ci]')"
+  codecov:
     timeout-minutes: 15
 
-    name: Build
+    name: Coverage
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go: [1.16, 1.17, 1.18]
-
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.go }}
+          go-version: 1.18
         id: go
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Install linters
-        run: make install-linters
-
       - name: Get dependencies
         run: go mod download
 
-      - name: Run tests
-        run: make test
+      - name: Run tests with coverage
+        run: make test-coverage
 
-      - name: Run linter
-        run: make lint
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./.testCoverage
