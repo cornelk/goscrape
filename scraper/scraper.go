@@ -108,7 +108,7 @@ func compileRegexps(sl []string) ([]*regexp.Regexp, error) {
 	return l, errs
 }
 
-// Start starts the scraping
+// Start starts the scraping.
 func (s *Scraper) Start() error {
 	if s.config.OutputDirectory != "" {
 		if err := os.MkdirAll(s.config.OutputDirectory, os.ModePerm); err != nil {

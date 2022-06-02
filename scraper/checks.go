@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// checkPageURL checks if a page should be downloaded
+// checkPageURL checks whether a page should be downloaded.
 func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
 	if url.Scheme != "http" && url.Scheme != "https" {
 		return false

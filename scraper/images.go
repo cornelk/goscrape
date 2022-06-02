@@ -45,7 +45,7 @@ func (s *Scraper) checkImageForRecode(url *url.URL, buf *bytes.Buffer) *bytes.Bu
 	return buf
 }
 
-// encodeJPEG encodes a new JPG based on the given quality setting
+// encodeJPEG encodes a new JPG based on the given quality setting.
 func (s *Scraper) encodeJPEG(img image.Image) *bytes.Buffer {
 	o := &jpeg.Options{
 		Quality: int(s.config.ImageQuality),
@@ -58,7 +58,7 @@ func (s *Scraper) encodeJPEG(img image.Image) *bytes.Buffer {
 	return outBuf
 }
 
-// recodeJPEG recodes the image and returns it if it is smaller than before
+// recodeJPEG recodes the image and returns it if it is smaller than before.
 func (s *Scraper) recodeJPEG(url fmt.Stringer, b []byte) *bytes.Buffer {
 	inBuf := bytes.NewBuffer(b)
 	img, err := jpeg.Decode(inBuf)
@@ -78,7 +78,7 @@ func (s *Scraper) recodeJPEG(url fmt.Stringer, b []byte) *bytes.Buffer {
 	return outBuf
 }
 
-// recodePNG recodes the image and returns it if it is smaller than before
+// recodePNG recodes the image and returns it if it is smaller than before.
 func (s *Scraper) recodePNG(url fmt.Stringer, b []byte) *bytes.Buffer {
 	inBuf := bytes.NewBuffer(b)
 	img, err := png.Decode(inBuf)

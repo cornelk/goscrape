@@ -57,7 +57,7 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 
 	for ori, filePath := range m {
 		fixed := fmt.Sprintf("url(%s)", filePath)
-		str = strings.Replace(str, ori, fixed, -1)
+		str = strings.ReplaceAll(str, ori, fixed)
 		s.log.Debug("CSS Element relinked",
 			zap.String("url", ori),
 			zap.String("fixed_url", fixed))
