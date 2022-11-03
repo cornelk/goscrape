@@ -26,6 +26,7 @@ func main() {
 	rootCmd.Flags().UintP("timeout", "t", 0, "time limit in seconds for each http request to connect and read the request body")
 	rootCmd.Flags().BoolP("verbose", "v", false, "verbose output")
 	rootCmd.Flags().StringP("user", "u", "", "user[:password] to use for authentication")
+	rootCmd.Flags().StringP("proxy", "p", "", "HTTP proxy during scraping")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("ERROR: %v\n", err)
@@ -59,6 +60,7 @@ func startScraper(cmd *cobra.Command, args []string) {
 	output, _ := cmd.Flags().GetString("output")
 	depth, _ := cmd.Flags().GetUint("depth")
 	timeout, _ := cmd.Flags().GetUint("timeout")
+	proxy, _ := cmd.Flags().GetString("proxy")
 
 	logger := logger(cmd)
 	cfg := scraper.Config{
@@ -70,6 +72,7 @@ func startScraper(cmd *cobra.Command, args []string) {
 		OutputDirectory: output,
 		Username:        username,
 		Password:        password,
+		Proxy:           proxy,
 	}
 
 	for _, url := range args {

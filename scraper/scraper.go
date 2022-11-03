@@ -14,6 +14,7 @@ import (
 	"github.com/headzoo/surf/agent"
 	"github.com/headzoo/surf/browser"
 	"go.uber.org/zap"
+	"golang.org/x/net/proxy"
 )
 
 // Config contains the scraper configuration.
@@ -29,6 +30,8 @@ type Config struct {
 	OutputDirectory string
 	Username        string
 	Password        string
+
+	Proxy string
 }
 
 // Scraper contains all scraping data.
@@ -66,6 +69,11 @@ func New(logger *zap.Logger, cfg Config) (*Scraper, error) {
 		errs = multierror.Append(errs, err)
 	}
 
+	proxyURL, err := url.Parse(cfg.Proxy)
+	if err != nil {
+		errs = multierror.Append(errs, err)
+	}
+
 	if errs != nil {
 		return nil, errs.ErrorOrNil()
 	}
@@ -77,6 +85,16 @@ func New(logger *zap.Logger, cfg Config) (*Scraper, error) {
 	b := surf.NewBrowser()
 	b.SetUserAgent(agent.GoogleBot())
 	b.SetTimeout(time.Duration(cfg.Timeout) * time.Second)
+
+	if cfg.Proxy != "" {
+		dialer, err := proxy.FromURL(proxyURL, proxy.Direct)
+		if err != nil {
+			return nil, err
+		}
+		b.SetTransport(&http.Transport{
+			Dial: dialer.Dial,
+		})
+	}
 
 	s := &Scraper{
 		config: cfg,
