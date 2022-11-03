@@ -12,4 +12,4 @@ test-coverage: ## run unit tests with test coverage
 
 install-linters: ## install all linters
 	go install github.com/fraugster/flint@v0.1.1
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.46.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.50.1
