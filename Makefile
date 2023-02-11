@@ -19,3 +19,6 @@ install: ## install all binaries
 
 install-linters: ## install all linters
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.51.1
+
+release-snapshot: ## build release binaries from current git state as snapshot
+	goreleaser release --snapshot --clean
