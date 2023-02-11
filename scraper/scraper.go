@@ -53,29 +53,30 @@ type Scraper struct {
 
 // New creates a new Scraper instance.
 func New(logger *zap.Logger, cfg Config) (*Scraper, error) {
-	var errs error
+	var errs []error
+
 	u, err := url.Parse(cfg.URL)
 	if err != nil {
-		errs = errors.Join(errs, err)
+		errs = append(errs, err)
 	}
 
 	includes, err := compileRegexps(cfg.Includes)
 	if err != nil {
-		errs = errors.Join(errs, err)
+		errs = append(errs, err)
 	}
 
 	excludes, err := compileRegexps(cfg.Excludes)
 	if err != nil {
-		errs = errors.Join(errs, err)
+		errs = append(errs, err)
 	}
 
 	proxyURL, err := url.Parse(cfg.Proxy)
 	if err != nil {
-		errs = errors.Join(errs, err)
+		errs = append(errs, err)
 	}
 
 	if errs != nil {
-		return nil, errs
+		return nil, errors.Join(errs...)
 	}
 
 	if u.Scheme == "" {
@@ -113,17 +114,18 @@ func New(logger *zap.Logger, cfg Config) (*Scraper, error) {
 // compileRegexps compiles the given regex strings to regular expressions
 // to be used in the include and exclude filters.
 func compileRegexps(sl []string) ([]*regexp.Regexp, error) {
-	var errs error
+	var errs []error
 	var l []*regexp.Regexp
+
 	for _, e := range sl {
 		re, err := regexp.Compile(e)
 		if err == nil {
 			l = append(l, re)
 		} else {
-			errs = errors.Join(errs, err)
+			errs = append(errs, err)
 		}
 	}
-	return l, errs
+	return l, errors.Join(errs...)
 }
 
 // Start starts the scraping.
