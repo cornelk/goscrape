@@ -4,11 +4,11 @@ import (
 	"net/url"
 	"testing"
 
-	"go.uber.org/zap/zaptest"
+	"github.com/cornelk/gotokit/log"
 )
 
 func Test_resolveURL(t *testing.T) {
-	logger := zaptest.NewLogger(t)
+	logger := log.NewTestLogger(t)
 	cfg := Config{
 		URL: "https://petpic.xyz/earth/",
 	}
@@ -80,7 +80,7 @@ func Test_urlRelativeToOther(t *testing.T) {
 }
 
 func Test_urlRelativeToRoot(t *testing.T) {
-	logger := zaptest.NewLogger(t)
+	logger := log.NewTestLogger(t)
 	cfg := Config{
 		URL: "https://localhost",
 	}

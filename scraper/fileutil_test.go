@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"testing"
 
-	"go.uber.org/zap/zaptest"
+	"github.com/cornelk/gotokit/log"
 )
 
 func TestGetFilePath(t *testing.T) {
@@ -24,7 +24,7 @@ func TestGetFilePath(t *testing.T) {
 	}
 
 	var cfg Config
-	logger := zaptest.NewLogger(t)
+	logger := log.NewTestLogger(t)
 	for _, fix := range fixtures {
 		cfg.URL = fix.BaseURL
 		s, err := New(logger, cfg)

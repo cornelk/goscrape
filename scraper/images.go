@@ -8,10 +8,10 @@ import (
 	"image/png"
 	"net/url"
 
+	"github.com/cornelk/gotokit/log"
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/matchers"
 	"github.com/h2non/filetype/types"
-	"go.uber.org/zap"
 )
 
 func (s *Scraper) checkImageForRecode(url *url.URL, buf *bytes.Buffer) *bytes.Buffer {
@@ -25,8 +25,8 @@ func (s *Scraper) checkImageForRecode(url *url.URL, buf *bytes.Buffer) *bytes.Bu
 	}
 
 	s.log.Debug("File type detected",
-		zap.String("Type", kind.MIME.Type),
-		zap.String("Subtype", kind.MIME.Subtype))
+		log.String("Type", kind.MIME.Type),
+		log.String("Subtype", kind.MIME.Subtype))
 
 	if kind.MIME.Type == matchers.TypeJpeg.MIME.Type && kind.MIME.Subtype == matchers.TypeJpeg.MIME.Subtype {
 		if recoded := s.recodeJPEG(url, buf.Bytes()); recoded != nil {
@@ -72,9 +72,9 @@ func (s *Scraper) recodeJPEG(url fmt.Stringer, b []byte) *bytes.Buffer {
 	}
 
 	s.log.Debug("Recoded JPEG",
-		zap.Stringer("URL", url),
-		zap.Int("Size old", len(b)),
-		zap.Int("Size new", outBuf.Len()))
+		log.Stringer("URL", url),
+		log.Int("Size old", len(b)),
+		log.Int("Size new", outBuf.Len()))
 	return outBuf
 }
 
@@ -92,8 +92,8 @@ func (s *Scraper) recodePNG(url fmt.Stringer, b []byte) *bytes.Buffer {
 	}
 
 	s.log.Debug("Recoded PNG",
-		zap.Stringer("URL", url),
-		zap.Int("Size old", len(b)),
-		zap.Int("Size new", outBuf.Len()))
+		log.Stringer("URL", url),
+		log.Int("Size old", len(b)),
+		log.Int("Size new", outBuf.Len()))
 	return outBuf
 }

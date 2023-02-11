@@ -3,7 +3,7 @@ package scraper
 import (
 	"net/url"
 
-	"go.uber.org/zap"
+	"github.com/cornelk/gotokit/log"
 )
 
 // checkPageURL checks whether a page should be downloaded.
@@ -12,7 +12,7 @@ func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
 		return false
 	}
 	if url.Host != s.URL.Host {
-		s.log.Debug("Skipping external host page", zap.Stringer("URL", url))
+		s.log.Debug("Skipping external host page", log.Stringer("URL", url))
 		return false
 	}
 
@@ -25,13 +25,13 @@ func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
 		if url.Fragment != "" {
 			return false
 		}
-		s.log.Debug("Skipping already checked page", zap.Stringer("URL", url))
+		s.log.Debug("Skipping already checked page", log.Stringer("URL", url))
 		return false
 	}
 
 	s.processed[p] = struct{}{}
 	if s.config.MaxDepth != 0 && currentDepth == s.config.MaxDepth {
-		s.log.Debug("Skipping too deep level page", zap.Stringer("URL", url))
+		s.log.Debug("Skipping too deep level page", log.Stringer("URL", url))
 		return false
 	}
 
@@ -42,7 +42,7 @@ func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
 		return false
 	}
 
-	s.log.Debug("New page to queue", zap.Stringer("URL", url))
+	s.log.Debug("New page to queue", log.Stringer("URL", url))
 	return true
 }
 
@@ -54,8 +54,8 @@ func (s *Scraper) isURLIncluded(url *url.URL) bool {
 	for _, re := range s.includes {
 		if re.MatchString(url.Path) {
 			s.log.Info("Including URL",
-				zap.Stringer("URL", url),
-				zap.Stringer("Included", re))
+				log.Stringer("URL", url),
+				log.Stringer("Included", re))
 			return true
 		}
 	}
@@ -70,8 +70,8 @@ func (s *Scraper) isURLExcluded(url *url.URL) bool {
 	for _, re := range s.excludes {
 		if re.MatchString(url.Path) {
 			s.log.Info("Skipping URL",
-				zap.Stringer("URL", url),
-				zap.Stringer("Excluded", re))
+				log.Stringer("URL", url),
+				log.Stringer("Excluded", re))
 			return true
 		}
 	}

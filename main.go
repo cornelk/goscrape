@@ -5,16 +5,17 @@ import (
 	"strings"
 
 	"github.com/cornelk/goscrape/scraper"
+	"github.com/cornelk/gotokit/env"
+	"github.com/cornelk/gotokit/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "goscrape http://website.com",
 		Short: "Scrape a website and create an offline browsable version on the disk",
-		Run:   startScraper,
+		RunE:  startScraper,
 	}
 
 	rootCmd.Flags().String("config", "", "config file (default is $HOME/.goscrape.yaml)")
@@ -33,12 +34,12 @@ func main() {
 	}
 }
 
-func startScraper(cmd *cobra.Command, args []string) {
+func startScraper(cmd *cobra.Command, args []string) error {
 	initializeViper(cmd)
 
 	if len(args) == 0 {
 		_ = cmd.Help()
-		return
+		return nil
 	}
 
 	var username, password string
@@ -62,7 +63,11 @@ func startScraper(cmd *cobra.Command, args []string) {
 	timeout, _ := cmd.Flags().GetUint("timeout")
 	proxy, _ := cmd.Flags().GetString("proxy")
 
-	logger := logger(cmd)
+	logger, err := createLogger()
+	if err != nil {
+		return fmt.Errorf("creating logger: %w", err)
+	}
+
 	cfg := scraper.Config{
 		Includes:        includes,
 		Excludes:        excludes,
@@ -79,15 +84,32 @@ func startScraper(cmd *cobra.Command, args []string) {
 		cfg.URL = url
 		sc, err := scraper.New(logger, cfg)
 		if err != nil {
-			logger.Fatal("Initializing scraper failed", zap.Error(err))
+			return fmt.Errorf("initializing scraper: %w", err)
 		}
 
-		logger.Info("Scraping", zap.Stringer("URL", sc.URL))
-		err = sc.Start()
-		if err != nil {
-			logger.Error("Scraping failed", zap.Error(err))
+		logger.Info("Scraping", log.Stringer("URL", sc.URL))
+		if err = sc.Start(); err != nil {
+			return fmt.Errorf("scraping '%s': %w", sc.URL, err)
 		}
 	}
+
+	return nil
+}
+
+func createLogger() (*log.Logger, error) {
+	logCfg, err := log.ConfigForEnv(env.Development)
+	if err != nil {
+		return nil, fmt.Errorf("initializing log config: %w", err)
+	}
+	logCfg.JSONOutput = false
+	logCfg.CallerInfo = false
+
+	logger, err := log.NewWithConfig(logCfg)
+	if err != nil {
+		return nil, fmt.Errorf("initializing logger: %w", err)
+	}
+	logger = logger.Named("goscrape")
+	return logger, nil
 }
 
 func initializeViper(cmd *cobra.Command) {
@@ -101,22 +123,4 @@ func initializeViper(cmd *cobra.Command) {
 	viper.AutomaticEnv()             // read in environment variables that match
 
 	_ = viper.ReadInConfig()
-}
-
-func logger(cmd *cobra.Command) *zap.Logger {
-	config := zap.NewDevelopmentConfig()
-	config.Development = false
-	config.DisableCaller = true
-	config.DisableStacktrace = true
-
-	level := config.Level
-	verbose, _ := cmd.Flags().GetBool("verbose")
-	if verbose {
-		level.SetLevel(zap.DebugLevel)
-	} else {
-		level.SetLevel(zap.InfoLevel)
-	}
-
-	log, _ := config.Build()
-	return log
 }

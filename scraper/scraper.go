@@ -10,10 +10,10 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/cornelk/gotokit/log"
 	"github.com/headzoo/surf"
 	"github.com/headzoo/surf/agent"
 	"github.com/headzoo/surf/browser"
-	"go.uber.org/zap"
 	"golang.org/x/net/proxy"
 )
 
@@ -37,7 +37,7 @@ type Config struct {
 // Scraper contains all scraping data.
 type Scraper struct {
 	config  Config
-	log     *zap.Logger
+	log     *log.Logger
 	URL     *url.URL
 	browser *browser.Browser
 
@@ -52,7 +52,7 @@ type Scraper struct {
 }
 
 // New creates a new Scraper instance.
-func New(logger *zap.Logger, cfg Config) (*Scraper, error) {
+func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 	var errs []error
 
 	u, err := url.Parse(cfg.URL)
@@ -152,25 +152,21 @@ func (s *Scraper) Start() error {
 }
 
 func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
-	s.log.Info("Downloading", zap.Stringer("URL", u))
+	s.log.Info("Downloading", log.Stringer("URL", u))
 	if err := s.browser.Open(u.String()); err != nil {
-		s.log.Error("Request failed",
-			zap.Stringer("URL", u),
-			zap.Error(err))
+		s.log.Error("Request failed", err, log.Stringer("URL", u))
 		return
 	}
 	if c := s.browser.StatusCode(); c != http.StatusOK {
-		s.log.Error("Request failed",
-			zap.Stringer("URL", u),
-			zap.Int("http_status_code", c))
+		s.log.Error("Request failed", nil,
+			log.Stringer("URL", u),
+			log.Int("http_status_code", c))
 		return
 	}
 
 	buf := &bytes.Buffer{}
 	if _, err := s.browser.Download(buf); err != nil {
-		s.log.Error("Downloading content failed",
-			zap.Stringer("URL", u),
-			zap.Error(err))
+		s.log.Error("Downloading content failed", err, log.Stringer("URL", u))
 		return
 	}
 
@@ -202,18 +198,15 @@ func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
 func (s *Scraper) storePage(u *url.URL, buf *bytes.Buffer) {
 	html, err := s.fixFileReferences(u, buf)
 	if err != nil {
-		s.log.Error("Fixing file references failed",
-			zap.Stringer("URL", u),
-			zap.Error(err))
+		s.log.Error("Fixing file references failed", err, log.Stringer("URL", u))
 	} else {
 		buf = bytes.NewBufferString(html)
 		filePath := s.GetFilePath(u, true)
 		// always update html files, content might have changed
 		if err = s.writeFile(filePath, buf); err != nil {
-			s.log.Error("Writing HTML to file failed",
-				zap.Stringer("URL", u),
-				zap.String("file", filePath),
-				zap.Error(err))
+			s.log.Error("Writing HTML to file failed", err,
+				log.Stringer("URL", u),
+				log.String("file", filePath))
 		}
 	}
 }

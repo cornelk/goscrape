@@ -3,11 +3,11 @@ package scraper
 import (
 	"testing"
 
-	"go.uber.org/zap/zaptest"
+	"github.com/cornelk/gotokit/log"
 )
 
 func TestRemoveAnchor(t *testing.T) {
-	logger := zaptest.NewLogger(t)
+	logger := log.NewTestLogger(t)
 	s, err := New(logger, Config{})
 	if err != nil {
 		t.Errorf("Scraper New failed: %v", err)

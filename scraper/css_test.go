@@ -5,11 +5,11 @@ import (
 	"net/url"
 	"testing"
 
-	"go.uber.org/zap/zaptest"
+	"github.com/cornelk/gotokit/log"
 )
 
 func TestCheckCSSForURLs(t *testing.T) {
-	logger := zaptest.NewLogger(t)
+	logger := log.NewTestLogger(t)
 	cfg := Config{
 		URL: "http://localhost",
 	}

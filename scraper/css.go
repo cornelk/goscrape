@@ -7,9 +7,9 @@ import (
 	"path"
 	"strings"
 
+	"github.com/cornelk/gotokit/log"
 	"github.com/gorilla/css/scanner"
 	"github.com/headzoo/surf/browser"
-	"go.uber.org/zap"
 )
 
 func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer {
@@ -59,8 +59,8 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 		fixed := fmt.Sprintf("url(%s)", filePath)
 		str = strings.ReplaceAll(str, ori, fixed)
 		s.log.Debug("CSS Element relinked",
-			zap.String("url", ori),
-			zap.String("fixed_url", fixed))
+			log.String("url", ori),
+			log.String("fixed_url", fixed))
 	}
 
 	return bytes.NewBufferString(str)

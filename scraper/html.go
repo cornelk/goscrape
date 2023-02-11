@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"go.uber.org/zap"
+	"github.com/cornelk/gotokit/log"
 )
 
 func (s *Scraper) fixFileReferences(url *url.URL, buf io.Reader) (string, error) {
@@ -55,6 +55,6 @@ func (s *Scraper) fixQuerySelection(url *url.URL, attribute string, selection *g
 		return
 	}
 
-	s.log.Debug("HTML Element relinked", zap.String("URL", src), zap.String("Fixed", resolved))
+	s.log.Debug("HTML Element relinked", log.String("URL", src), log.String("Fixed", resolved))
 	selection.SetAttr(attribute, resolved)
 }
