@@ -3,13 +3,13 @@ package scraper
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/headzoo/surf"
 	"github.com/headzoo/surf/agent"
 	"github.com/headzoo/surf/browser"
@@ -53,29 +53,29 @@ type Scraper struct {
 
 // New creates a new Scraper instance.
 func New(logger *zap.Logger, cfg Config) (*Scraper, error) {
-	var errs *multierror.Error
+	var errs error
 	u, err := url.Parse(cfg.URL)
 	if err != nil {
-		errs = multierror.Append(errs, err)
+		errs = errors.Join(errs, err)
 	}
 
 	includes, err := compileRegexps(cfg.Includes)
 	if err != nil {
-		errs = multierror.Append(errs, err)
+		errs = errors.Join(errs, err)
 	}
 
 	excludes, err := compileRegexps(cfg.Excludes)
 	if err != nil {
-		errs = multierror.Append(errs, err)
+		errs = errors.Join(errs, err)
 	}
 
 	proxyURL, err := url.Parse(cfg.Proxy)
 	if err != nil {
-		errs = multierror.Append(errs, err)
+		errs = errors.Join(errs, err)
 	}
 
 	if errs != nil {
-		return nil, errs.ErrorOrNil()
+		return nil, errs
 	}
 
 	if u.Scheme == "" {
@@ -120,7 +120,7 @@ func compileRegexps(sl []string) ([]*regexp.Regexp, error) {
 		if err == nil {
 			l = append(l, re)
 		} else {
-			errs = multierror.Append(errs, err)
+			errs = errors.Join(errs, err)
 		}
 	}
 	return l, errs
