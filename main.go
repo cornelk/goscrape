@@ -2,66 +2,65 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
+	"github.com/alexflint/go-arg"
 	"github.com/cornelk/goscrape/scraper"
 	"github.com/cornelk/gotokit/env"
 	"github.com/cornelk/gotokit/log"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
+const toolName = "goscrape"
+
+type arguments struct {
+	Exclude []string `arg:"-n,--include" help:"only include URLs with PERL Regular Expressions support"`
+	Include []string `arg:"-x,--exclude" help:"exclude URLs with PERL Regular Expressions support"`
+	Output  string   `arg:"-o,--output" help:"output directory to write files to"`
+	URLs    []string `arg:"positional,required"`
+
+	Depth        int64 `arg:"-d,--depth" help:"download depth, 0 for unlimited" default:"10"`
+	ImageQuality int64 `arg:"-i,--imagequality" help:"image quality, 0 to disable reencoding"`
+	Timeout      int64 `arg:"-t,--timeout" help:"time limit in seconds for each HTTP request to connect and read the request body"`
+
+	Proxy string `arg:"-p,--proxy" help:"HTTP proxy to use for scraping"`
+	User  string `arg:"-u,--user" help:"user[:password] to use for authentication"`
+
+	Verbose bool `arg:"-v,--verbose" help:"verbose output"`
+}
+
+func (arguments) Description() string {
+	return "Scrape a website and create an offline browsable version on the disk.\n"
+}
+
 func main() {
-	rootCmd := &cobra.Command{
-		Use:   "goscrape http://website.com",
-		Short: "Scrape a website and create an offline browsable version on the disk",
-		RunE:  startScraper,
-	}
+	var args arguments
+	arg.MustParse(&args)
 
-	rootCmd.Flags().String("config", "", "config file (default is $HOME/.goscrape.yaml)")
-	rootCmd.Flags().StringArrayP("include", "n", nil, "only include URLs with PERL Regular Expressions support")
-	rootCmd.Flags().StringArrayP("exclude", "x", nil, "exclude URLs with PERL Regular Expressions support")
-	rootCmd.Flags().StringP("output", "o", "", "output directory to write files to")
-	rootCmd.Flags().IntP("imagequality", "i", 0, "image quality, 0 to disable reencoding")
-	rootCmd.Flags().UintP("depth", "d", 10, "download depth, 0 for unlimited")
-	rootCmd.Flags().UintP("timeout", "t", 0, "time limit in seconds for each http request to connect and read the request body")
-	rootCmd.Flags().BoolP("verbose", "v", false, "verbose output")
-	rootCmd.Flags().StringP("user", "u", "", "user[:password] to use for authentication")
-	rootCmd.Flags().StringP("proxy", "p", "", "HTTP proxy during scraping")
-
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Printf("ERROR: %v\n", err)
+	if err := run(args); err != nil {
+		fmt.Printf("Execution error: %s\n", err)
+		os.Exit(1)
 	}
 }
 
-func startScraper(cmd *cobra.Command, args []string) error {
-	initializeViper(cmd)
-
-	if len(args) == 0 {
-		_ = cmd.Help()
+func run(args arguments) error {
+	if len(args.URLs) == 0 {
 		return nil
 	}
 
 	var username, password string
-	userParam, _ := cmd.Flags().GetString("user")
-	if userParam != "" {
-		sl := strings.Split(userParam, ":")
+	if args.User != "" {
+		sl := strings.Split(args.User, ":")
 		username = sl[0]
 		if len(sl) > 1 {
 			password = sl[1]
 		}
 	}
 
-	includes, _ := cmd.Flags().GetStringArray("include")
-	excludes, _ := cmd.Flags().GetStringArray("exclude")
-	imageQuality, _ := cmd.Flags().GetInt("imagequality")
-	if imageQuality < 0 || imageQuality >= 100 {
+	imageQuality := args.ImageQuality
+	if args.ImageQuality < 0 || args.ImageQuality >= 100 {
 		imageQuality = 0
 	}
-	output, _ := cmd.Flags().GetString("output")
-	depth, _ := cmd.Flags().GetUint("depth")
-	timeout, _ := cmd.Flags().GetUint("timeout")
-	proxy, _ := cmd.Flags().GetString("proxy")
 
 	logger, err := createLogger()
 	if err != nil {
@@ -69,18 +68,18 @@ func startScraper(cmd *cobra.Command, args []string) error {
 	}
 
 	cfg := scraper.Config{
-		Includes:        includes,
-		Excludes:        excludes,
+		Includes:        args.Include,
+		Excludes:        args.Exclude,
 		ImageQuality:    uint(imageQuality),
-		MaxDepth:        depth,
-		Timeout:         timeout,
-		OutputDirectory: output,
+		MaxDepth:        uint(args.Depth),
+		Timeout:         uint(args.Timeout),
+		OutputDirectory: args.Output,
 		Username:        username,
 		Password:        password,
-		Proxy:           proxy,
+		Proxy:           args.Proxy,
 	}
 
-	for _, url := range args {
+	for _, url := range args.URLs {
 		cfg.URL = url
 		sc, err := scraper.New(logger, cfg)
 		if err != nil {
@@ -108,19 +107,6 @@ func createLogger() (*log.Logger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("initializing logger: %w", err)
 	}
-	logger = logger.Named("goscrape")
+	logger = logger.Named(toolName)
 	return logger, nil
-}
-
-func initializeViper(cmd *cobra.Command) {
-	configFile, err := cmd.Flags().GetString("config")
-	if err == nil && configFile != "" { // enable ability to specify config file via flag
-		viper.SetConfigFile(configFile)
-	}
-
-	viper.SetConfigName(".goscrape") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")     // adding home directory as first search path
-	viper.AutomaticEnv()             // read in environment variables that match
-
-	_ = viper.ReadInConfig()
 }
