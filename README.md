@@ -1,6 +1,13 @@
-# goscrape [![Build Status](https://travis-ci.org/cornelk/goscrape.svg?branch=master)](https://travis-ci.org/cornelk/goscrape) [![GoDoc](https://godoc.org/github.com/cornelk/goscrape?status.svg)](https://godoc.org/github.com/cornelk/goscrape) [![Go Report Card](https://goreportcard.com/badge/cornelk/goscrape)](https://goreportcard.com/report/github.com/cornelk/goscrape) [![codecov](https://codecov.io/gh/cornelk/goscrape/branch/master/graph/badge.svg)](https://codecov.io/gh/cornelk/goscrape)
+# goscrape - create offline browsable copies of websites
 
-A web scraper built with Golang. It downloads the content of a website or blog and allows you to read it offline.
+[![Build status](https://github.com/cornelk/goscrape/actions/workflows/go.yaml/badge.svg?branch=main)](https://github.com/cornelk/goscrape/actions)
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/cornelk/goscrape)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cornelk/goscrape)](https://goreportcard.com/report/github.com/cornelk/goscrape)
+[![codecov](https://codecov.io/gh/cornelk/goscrape/branch/main/graph/badge.svg?token=NS5UY28V3A)](https://codecov.io/gh/cornelk/goscrape)
+
+A web scraper built with Golang. It downloads the content of a website and allows it to be archived and read offline.
+
+## Features
 
 Features and advantages over existing tools like wget, httrack, Teleport Pro:
 
@@ -13,17 +20,25 @@ Features and advantages over existing tools like wget, httrack, Teleport Pro:
 * Assets from external domains are downloaded automatically
 * Sane default values
 
-Limitations:
+## Limitations
 
 * No GUI version, console only
 
 ## Installation
 
-You need to have Golang installed, otherwise follow the guide at [https://golang.org/doc/install](https://golang.org/doc/install).
+There are 2 options to install goscrape:
+
+1. Download and unpack a binary release from [Releases](https://github.com/cornelk/goscrape/releases)
+
+or
+
+2. Compile the latest release from source:
 
 ```
 go install github.com/cornelk/goscrape@latest
 ```
+
+Compiling the tool from source code needs to have a recent version of [Golang](https://go.dev/) installed.
 
 ## Usage
 ```
@@ -33,31 +48,29 @@ goscrape http://website.com
 ## Options
 
 ```
-Scrape a website and create an offline browsable version on the disk
+Scrape a website and create an offline browsable version on the disk.
 
-Usage:
-  goscrape http://website.com [flags]
+Usage: goscrape [--include INCLUDE] [--exclude EXCLUDE] [--output OUTPUT] [--depth DEPTH] [--imagequality IMAGEQUALITY] [--timeout TIMEOUT] [--proxy PROXY] [--user USER] [--verbose] URLS [URLS ...]
 
-Flags:
-      --config string         config file (default is $HOME/.goscrape.yaml)
-  -d, --depth uint            download depth, 0 for unlimited (default 10)
-  -x, --exclude stringArray   exclude URLs with PERL Regular Expressions support
-  -h, --help                  help for goscrape
-  -i, --imagequality int      image quality, 0 to disable reencoding
-  -n, --include stringArray   only include URLs with PERL Regular Expressions support
-  -o, --output string         output directory to write files to
-  -t, --timeout uint          time limit in seconds for each http request to connect and read the request body
-  -u, --user string           user[:password] to use for authentication
-  -v, --verbose               verbose output
+Positional arguments:
+  URLS
+
+Options:
+  --include INCLUDE, -n INCLUDE
+                         only include URLs with PERL Regular Expressions support
+  --exclude EXCLUDE, -x EXCLUDE
+                         exclude URLs with PERL Regular Expressions support
+  --output OUTPUT, -o OUTPUT
+                         output directory to write files to
+  --depth DEPTH, -d DEPTH
+                         download depth, 0 for unlimited [default: 10]
+  --imagequality IMAGEQUALITY, -i IMAGEQUALITY
+                         image quality, 0 to disable reencoding
+  --timeout TIMEOUT, -t TIMEOUT
+                         time limit in seconds for each HTTP request to connect and read the request body
+  --proxy PROXY, -p PROXY
+                         HTTP proxy to use for scraping
+  --user USER, -u USER   user[:password] to use for authentication
+  --verbose, -v          verbose output
+  --help, -h             display this help and exit
 ```
-
-## Dependencies
-
-- [github.com/gorilla/css](https://github.com/gorilla/css) css file tokenizer
-- [github.com/h2non/filetype](https://github.com/h2non/filetype) image format identification
-- [github.com/hashicorp/go-multierror](https://github.com/hashicorp/go-multierror) multi error wrapping
-- [github.com/headzoo/surf](https://github.com/headzoo/surf) virtual web browser
-- [github.com/PuerkitoBio/goquery](https://github.com/PuerkitoBio/goquery) HTML document traversal
-- [github.com/spf13/cobra](https://github.com/spf13/cobra) command line handling
-- [github.com/spf13/viper](https://github.com/spf13/viper) configuration
-- [go.uber.org/zap](https://go.uber.org/zap) logging
