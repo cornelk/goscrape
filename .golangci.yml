@@ -65,3 +65,5 @@ issues:
 linters-settings:
   cyclop:
     max-complexity: 15
+  whitespace:
+    multi-func: true

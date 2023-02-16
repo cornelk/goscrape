@@ -6,13 +6,13 @@ import (
 	"github.com/cornelk/gotokit/log"
 )
 
-// checkPageURL checks whether a page should be downloaded.
-func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
+// shouldPageBeDownloaded checks whether a page should be downloaded.
+func (s *Scraper) shouldPageBeDownloaded(url *url.URL, currentDepth uint) bool {
 	if url.Scheme != "http" && url.Scheme != "https" {
 		return false
 	}
 	if url.Host != s.URL.Host {
-		s.log.Debug("Skipping external host page", log.Stringer("URL", url))
+		s.log.Debug("Skipping external host page", log.Stringer("url", url))
 		return false
 	}
 
@@ -21,17 +21,17 @@ func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
 		p = "/"
 	}
 
-	if _, ok := s.processed[p]; ok { // was already downloaded or checked
+	if _, ok := s.processed[p]; ok { // was already downloaded or checked?
 		if url.Fragment != "" {
 			return false
 		}
-		s.log.Debug("Skipping already checked page", log.Stringer("URL", url))
+		s.log.Debug("Skipping already checked page", log.Stringer("url", url))
 		return false
 	}
 
 	s.processed[p] = struct{}{}
 	if s.config.MaxDepth != 0 && currentDepth == s.config.MaxDepth {
-		s.log.Debug("Skipping too deep level page", log.Stringer("URL", url))
+		s.log.Debug("Skipping too deep level page", log.Stringer("url", url))
 		return false
 	}
 
@@ -42,7 +42,7 @@ func (s *Scraper) checkPageURL(url *url.URL, currentDepth uint) bool {
 		return false
 	}
 
-	s.log.Debug("New page to queue", log.Stringer("URL", url))
+	s.log.Debug("New page to download", log.Stringer("url", url))
 	return true
 }
 
@@ -54,8 +54,8 @@ func (s *Scraper) isURLIncluded(url *url.URL) bool {
 	for _, re := range s.includes {
 		if re.MatchString(url.Path) {
 			s.log.Info("Including URL",
-				log.Stringer("URL", url),
-				log.Stringer("Included", re))
+				log.Stringer("url", url),
+				log.Stringer("included_expression", re))
 			return true
 		}
 	}
@@ -70,8 +70,8 @@ func (s *Scraper) isURLExcluded(url *url.URL) bool {
 	for _, re := range s.excludes {
 		if re.MatchString(url.Path) {
 			s.log.Info("Skipping URL",
-				log.Stringer("URL", url),
-				log.Stringer("Excluded", re))
+				log.Stringer("url", url),
+				log.Stringer("excluded_expression", re))
 			return true
 		}
 	}

@@ -38,6 +38,7 @@ func (s *Scraper) fixFileReferences(url *url.URL, buf io.Reader) (string, error)
 
 func (s *Scraper) fixQuerySelection(url *url.URL, attribute string, selection *goquery.Selection,
 	linkIsAPage bool, relativeToRoot string) {
+
 	src, ok := selection.Attr(attribute)
 	if !ok {
 		return
@@ -55,6 +56,8 @@ func (s *Scraper) fixQuerySelection(url *url.URL, attribute string, selection *g
 		return
 	}
 
-	s.log.Debug("HTML Element relinked", log.String("URL", src), log.String("Fixed", resolved))
+	s.log.Debug("HTML Element relinked",
+		log.String("url", src),
+		log.String("fixed_url", resolved))
 	selection.SetAttr(attribute, resolved)
 }

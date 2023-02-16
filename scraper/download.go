@@ -50,12 +50,12 @@ func (s *Scraper) downloadAsset(asset *browser.DownloadableAsset, processor asse
 		return // exists already on disk
 	}
 
-	s.log.Info("Downloading", log.String("URL", u))
+	s.log.Info("Downloading", log.String("url", u))
 
 	buf := &bytes.Buffer{}
 	_, err := asset.Download(buf)
 	if err != nil {
-		s.log.Error("Downloading asset failed", err, log.String("URL", u))
+		s.log.Error("Downloading asset failed", err, log.String("url", u))
 		return
 	}
 
@@ -65,7 +65,7 @@ func (s *Scraper) downloadAsset(asset *browser.DownloadableAsset, processor asse
 
 	if err = s.writeFile(filePath, buf); err != nil {
 		s.log.Error("Writing asset file failed", err,
-			log.String("URL", u),
+			log.String("url", u),
 			log.String("file", filePath))
 	}
 }

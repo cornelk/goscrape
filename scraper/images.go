@@ -25,8 +25,8 @@ func (s *Scraper) checkImageForRecode(url *url.URL, buf *bytes.Buffer) *bytes.Bu
 	}
 
 	s.log.Debug("File type detected",
-		log.String("Type", kind.MIME.Type),
-		log.String("Subtype", kind.MIME.Subtype))
+		log.String("type", kind.MIME.Type),
+		log.String("sub_type", kind.MIME.Subtype))
 
 	if kind.MIME.Type == matchers.TypeJpeg.MIME.Type && kind.MIME.Subtype == matchers.TypeJpeg.MIME.Subtype {
 		if recoded := s.recodeJPEG(url, buf.Bytes()); recoded != nil {
@@ -72,9 +72,9 @@ func (s *Scraper) recodeJPEG(url fmt.Stringer, b []byte) *bytes.Buffer {
 	}
 
 	s.log.Debug("Recoded JPEG",
-		log.Stringer("URL", url),
-		log.Int("Size old", len(b)),
-		log.Int("Size new", outBuf.Len()))
+		log.Stringer("url", url),
+		log.Int("size_original", len(b)),
+		log.Int("size_recoded", outBuf.Len()))
 	return outBuf
 }
 
@@ -93,7 +93,7 @@ func (s *Scraper) recodePNG(url fmt.Stringer, b []byte) *bytes.Buffer {
 
 	s.log.Debug("Recoded PNG",
 		log.Stringer("URL", url),
-		log.Int("Size old", len(b)),
-		log.Int("Size new", outBuf.Len()))
+		log.Int("size_original", len(b)),
+		log.Int("size_recoded", outBuf.Len()))
 	return outBuf
 }

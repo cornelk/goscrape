@@ -113,19 +113,23 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 
 // compileRegexps compiles the given regex strings to regular expressions
 // to be used in the include and exclude filters.
-func compileRegexps(sl []string) ([]*regexp.Regexp, error) {
+func compileRegexps(regexps []string) ([]*regexp.Regexp, error) {
 	var errs []error
-	var l []*regexp.Regexp
+	var compiled []*regexp.Regexp
 
-	for _, e := range sl {
-		re, err := regexp.Compile(e)
+	for _, exp := range regexps {
+		re, err := regexp.Compile(exp)
 		if err == nil {
-			l = append(l, re)
+			compiled = append(compiled, re)
 		} else {
 			errs = append(errs, err)
 		}
 	}
-	return l, errors.Join(errs...)
+
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+	return compiled, nil
 }
 
 // Start starts the scraping.
@@ -153,20 +157,22 @@ func (s *Scraper) Start() error {
 
 func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
 	s.log.Info("Downloading", log.Stringer("URL", u))
+
 	if err := s.browser.Open(u.String()); err != nil {
-		s.log.Error("Request failed", err, log.Stringer("URL", u))
+		s.log.Error("Request failed", err, log.Stringer("url", u))
 		return
 	}
+
 	if c := s.browser.StatusCode(); c != http.StatusOK {
 		s.log.Error("Request failed", nil,
-			log.Stringer("URL", u),
+			log.Stringer("url", u),
 			log.Int("http_status_code", c))
 		return
 	}
 
 	buf := &bytes.Buffer{}
 	if _, err := s.browser.Download(buf); err != nil {
-		s.log.Error("Downloading content failed", err, log.Stringer("URL", u))
+		s.log.Error("Downloading content failed", err, log.Stringer("url", u))
 		return
 	}
 
@@ -185,7 +191,7 @@ func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
 	// check first and download afterwards to not hit max depth limit for
 	// start page links because of recursive linking
 	for _, link := range s.browser.Links() {
-		if s.checkPageURL(link.URL, currentDepth) {
+		if s.shouldPageBeDownloaded(link.URL, currentDepth) {
 			toScrape = append(toScrape, link.URL)
 		}
 	}
@@ -198,15 +204,16 @@ func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
 func (s *Scraper) storePage(u *url.URL, buf *bytes.Buffer) {
 	html, err := s.fixFileReferences(u, buf)
 	if err != nil {
-		s.log.Error("Fixing file references failed", err, log.Stringer("URL", u))
-	} else {
-		buf = bytes.NewBufferString(html)
-		filePath := s.GetFilePath(u, true)
-		// always update html files, content might have changed
-		if err = s.writeFile(filePath, buf); err != nil {
-			s.log.Error("Writing HTML to file failed", err,
-				log.Stringer("URL", u),
-				log.String("file", filePath))
-		}
+		s.log.Error("Fixing file references failed", err, log.Stringer("url", u))
+		return
+	}
+
+	buf = bytes.NewBufferString(html)
+	filePath := s.GetFilePath(u, true)
+	// always update html files, content might have changed
+	if err = s.writeFile(filePath, buf); err != nil {
+		s.log.Error("Writing HTML to file failed", err,
+			log.Stringer("URL", u),
+			log.String("file", filePath))
 	}
 }
