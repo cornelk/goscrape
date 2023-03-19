@@ -50,7 +50,7 @@ goscrape http://website.com
 ```
 Scrape a website and create an offline browsable version on the disk.
 
-Usage: goscrape [--include INCLUDE] [--exclude EXCLUDE] [--output OUTPUT] [--depth DEPTH] [--imagequality IMAGEQUALITY] [--timeout TIMEOUT] [--proxy PROXY] [--user USER] [--verbose] URLS [URLS ...]
+Usage: goscrape [--include INCLUDE] [--exclude EXCLUDE] [--output OUTPUT] [--depth DEPTH] [--imagequality IMAGEQUALITY] [--timeout TIMEOUT] [--proxy PROXY] [--user USER] [--useragent USERAGENT] [--verbose] URLS [URLS ...]
 
 Positional arguments:
   URLS
@@ -71,6 +71,8 @@ Options:
   --proxy PROXY, -p PROXY
                          HTTP proxy to use for scraping
   --user USER, -u USER   user[:password] to use for authentication
+  --useragent USERAGENT, -a USERAGENT 
+                         user agent to use for scraping
   --verbose, -v          verbose output
   --help, -h             display this help and exit
 ```
