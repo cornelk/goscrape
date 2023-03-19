@@ -31,7 +31,8 @@ type Config struct {
 	Username        string
 	Password        string
 
-	Proxy string
+	UserAgent string
+	Proxy     string
 }
 
 // Scraper contains all scraping data.
@@ -83,8 +84,12 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 		u.Scheme = "http" // if no URL scheme was given default to http
 	}
 
+	if cfg.UserAgent == "" {
+		cfg.UserAgent = agent.GoogleBot()
+	}
+
 	b := surf.NewBrowser()
-	b.SetUserAgent(agent.GoogleBot())
+	b.SetUserAgent(cfg.UserAgent)
 	b.SetTimeout(time.Duration(cfg.Timeout) * time.Second)
 
 	if cfg.Proxy != "" {

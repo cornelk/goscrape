@@ -23,8 +23,9 @@ type arguments struct {
 	ImageQuality int64 `arg:"-i,--imagequality" help:"image quality, 0 to disable reencoding"`
 	Timeout      int64 `arg:"-t,--timeout" help:"time limit in seconds for each HTTP request to connect and read the request body"`
 
-	Proxy string `arg:"-p,--proxy" help:"HTTP proxy to use for scraping"`
-	User  string `arg:"-u,--user" help:"user[:password] to use for authentication"`
+	Proxy     string `arg:"-p,--proxy" help:"HTTP proxy to use for scraping"`
+	User      string `arg:"-u,--user" help:"user[:password] to use for authentication"`
+	UserAgent string `arg:"-a,--useragent" help:"user agent to use for scraping"`
 
 	Verbose bool `arg:"-v,--verbose" help:"verbose output"`
 }
@@ -76,6 +77,7 @@ func run(args arguments) error {
 		OutputDirectory: args.Output,
 		Username:        username,
 		Password:        password,
+		UserAgent:       args.UserAgent,
 		Proxy:           args.Proxy,
 	}
 
