@@ -63,6 +63,9 @@ func run(args arguments) error {
 		imageQuality = 0
 	}
 
+	if args.Verbose {
+		log.SetDefaultLevel(log.DebugLevel)
+	}
 	logger, err := createLogger()
 	if err != nil {
 		return fmt.Errorf("creating logger: %w", err)
