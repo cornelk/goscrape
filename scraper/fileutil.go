@@ -31,11 +31,9 @@ func GetPageFilePath(url *url.URL) string {
 
 	default:
 		ext := filepath.Ext(fileName)
-		// if file extension is missing add .html
+		// if file extension is missing add .html, otherwise keep the existing file extension
 		if ext == "" {
 			fileName += PageExtension
-		} else if ext != PageExtension { // replace any other extension with .html
-			fileName = fileName[:len(fileName)-len(ext)] + PageExtension
 		}
 	}
 

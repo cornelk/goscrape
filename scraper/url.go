@@ -20,7 +20,7 @@ func (s *Scraper) RemoveAnchor(path string) string {
 	return path[:sl+an+1]
 }
 
-func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, relativeToRoot string) string {
+func (s *Scraper) resolveURL(base *url.URL, reference string, isHyperlink bool, relativeToRoot string) string {
 	ur, err := url.Parse(reference)
 	if err != nil {
 		return ""
@@ -28,14 +28,14 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, 
 
 	var resolvedURL *url.URL
 	if ur.Host != "" && ur.Host != s.URL.Host {
-		if linkIsAPage { // do not change links to external websites
+		if isHyperlink { // do not change links to external websites
 			return reference
 		}
 
 		resolvedURL = base.ResolveReference(ur)
 		resolvedURL.Path = filepath.Join("_"+ur.Host, resolvedURL.Path)
 	} else {
-		if linkIsAPage {
+		if isHyperlink {
 			ur.Path = GetPageFilePath(ur)
 			resolvedURL = base.ResolveReference(ur)
 		} else {
@@ -62,7 +62,7 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, linkIsAPage bool, 
 		}
 	}
 
-	if linkIsAPage {
+	if isHyperlink {
 		if resolved[len(resolved)-1] == '/' {
 			resolved += PageDirIndex // link dir index to index.html
 		} else {

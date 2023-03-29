@@ -37,10 +37,13 @@ func (s *Scraper) fixFileReferences(url *url.URL, buf io.Reader) (string, error)
 }
 
 func (s *Scraper) fixQuerySelection(url *url.URL, attribute string, selection *goquery.Selection,
-	linkIsAPage bool, relativeToRoot string) {
+	isHyperlink bool, relativeToRoot string) {
 
 	src, ok := selection.Attr(attribute)
 	if !ok {
+		return
+	}
+	if strings.HasPrefix(src, "#") || strings.HasPrefix(src, "/#") { // anchor
 		return
 	}
 
@@ -51,7 +54,7 @@ func (s *Scraper) fixQuerySelection(url *url.URL, attribute string, selection *g
 		return
 	}
 
-	resolved := s.resolveURL(url, src, linkIsAPage, relativeToRoot)
+	resolved := s.resolveURL(url, src, isHyperlink, relativeToRoot)
 	if src == resolved { // nothing changed
 		return
 	}
