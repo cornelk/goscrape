@@ -6,8 +6,8 @@ github.com/alexflint/go-scalar v1.1.0 h1:aaAouLLzI9TChcPXotr6gUhq+Scr8rl0P9P4Pnl
 github.com/alexflint/go-scalar v1.1.0/go.mod h1:LoFvNMqS1CPrMVltza4LvnGKhaSpc3oyLEBUZVhhS2o=
 github.com/andybalholm/cascadia v1.3.1 h1:nhxRkql1kdYCc8Snf7D5/D3spOX+dBgjA6u8x004T2c=
 github.com/andybalholm/cascadia v1.3.1/go.mod h1:R4bJ1UQfqADjvDa4P6HZHLh/3OxWWEqc0Sk8XGwHqvA=
-github.com/cornelk/gotokit v0.0.0-20230328222209-3e95e00ec750 h1:nCtsNEVLEc2J8DIBKxcF6Jq2auO5feqFyHWdB4kTWRI=
-github.com/cornelk/gotokit v0.0.0-20230328222209-3e95e00ec750/go.mod h1:AqaBuDSwZgV5co2azuK04vpUmbz4ExuV/6/Knqw8ypM=
+github.com/cornelk/gotokit v0.0.0-20230329145859-cb335157df84 h1:nmk3FdqR7iTe3D9K3vlqznnTHYmc8MBnegps6TtrGOA=
+github.com/cornelk/gotokit v0.0.0-20230329145859-cb335157df84/go.mod h1:AqaBuDSwZgV5co2azuK04vpUmbz4ExuV/6/Knqw8ypM=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

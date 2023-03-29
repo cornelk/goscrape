@@ -7,8 +7,15 @@ import (
 
 	"github.com/alexflint/go-arg"
 	"github.com/cornelk/goscrape/scraper"
+	"github.com/cornelk/gotokit/buildinfo"
 	"github.com/cornelk/gotokit/env"
 	"github.com/cornelk/gotokit/log"
+)
+
+var (
+	version = "dev"
+	commit  = ""
+	date    = ""
 )
 
 type arguments struct {
@@ -30,6 +37,10 @@ type arguments struct {
 
 func (arguments) Description() string {
 	return "Scrape a website and create an offline browsable version on the disk.\n"
+}
+
+func (arguments) Version() string {
+	return fmt.Sprintf("Version: %s\n", buildinfo.Version(version, commit, date))
 }
 
 func main() {

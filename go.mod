@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/alexflint/go-arg v1.4.3
-	github.com/cornelk/gotokit v0.0.0-20230328222209-3e95e00ec750
+	github.com/cornelk/gotokit v0.0.0-20230329145859-cb335157df84
 	github.com/gorilla/css v1.0.0
 	github.com/h2non/filetype v1.1.4-0.20230123234534-cfcd7d097bc4
 	github.com/headzoo/surf v1.0.1
