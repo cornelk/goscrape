@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/cornelk/gotokit/log"
+	"github.com/h2non/filetype"
+	"github.com/h2non/filetype/types"
 	"github.com/headzoo/surf"
 	"github.com/headzoo/surf/agent"
 	"github.com/headzoo/surf/browser"
@@ -156,11 +158,11 @@ func (s *Scraper) Start() error {
 		s.browser.AddRequestHeader("Authorization", "Basic "+auth)
 	}
 
-	s.downloadPage(s.URL, 0)
+	s.downloadURL(s.URL, 0)
 	return nil
 }
 
-func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
+func (s *Scraper) downloadURL(u *url.URL, currentDepth uint) {
 	s.log.Info("Downloading", log.Stringer("URL", u))
 
 	if err := s.browser.Open(u.String()); err != nil {
@@ -181,6 +183,12 @@ func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
 		return
 	}
 
+	fileExtension := ""
+	kind, err := filetype.Match(buf.Bytes())
+	if err == nil && kind != types.Unknown {
+		fileExtension = kind.Extension
+	}
+
 	if currentDepth == 0 {
 		u = s.browser.Url()
 		// use the URL that the website returned as new base url for the
@@ -188,7 +196,7 @@ func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
 		s.URL = u
 	}
 
-	s.storePage(u, buf)
+	s.storeDownload(u, buf, fileExtension)
 
 	s.downloadReferences()
 
@@ -202,22 +210,29 @@ func (s *Scraper) downloadPage(u *url.URL, currentDepth uint) {
 	}
 
 	for _, URL := range toScrape {
-		s.downloadPage(URL, currentDepth+1)
+		s.downloadURL(URL, currentDepth+1)
 	}
 }
 
-func (s *Scraper) storePage(u *url.URL, buf *bytes.Buffer) {
-	html, err := s.fixFileReferences(u, buf)
-	if err != nil {
-		s.log.Error("Fixing file references failed", err, log.Stringer("url", u))
-		return
+// storeDownload writes the download to a file, if a known binary file is detected, processing of the file as
+// page to look for links is skipped.
+func (s *Scraper) storeDownload(u *url.URL, buf *bytes.Buffer, fileExtension string) {
+	isAPage := false
+	if fileExtension == "" {
+		html, err := s.fixFileReferences(u, buf)
+		if err != nil {
+			s.log.Error("Fixing file references failed", err, log.Stringer("url", u))
+			return
+		}
+
+		buf = bytes.NewBufferString(html)
+		isAPage = true
 	}
 
-	buf = bytes.NewBufferString(html)
-	filePath := s.GetFilePath(u, true)
+	filePath := s.GetFilePath(u, isAPage)
 	// always update html files, content might have changed
-	if err = s.writeFile(filePath, buf); err != nil {
-		s.log.Error("Writing HTML to file failed", err,
+	if err := s.writeFile(filePath, buf); err != nil {
+		s.log.Error("Writing to file failed", err,
 			log.Stringer("URL", u),
 			log.String("file", filePath))
 	}

@@ -42,7 +42,7 @@ func Test_resolveURL(t *testing.T) {
 	type filePathFixture struct {
 		BaseURL        url.URL
 		Reference      string
-		IsPage         bool
+		IsHyperlink    bool
 		RelativeToRoot string
 		Resolved       string
 	}
@@ -68,7 +68,7 @@ func Test_resolveURL(t *testing.T) {
 	}
 
 	for _, fix := range fixtures {
-		resolved := s.resolveURL(&fix.BaseURL, fix.Reference, fix.IsPage, fix.RelativeToRoot)
+		resolved := s.resolveURL(&fix.BaseURL, fix.Reference, fix.IsHyperlink, fix.RelativeToRoot)
 
 		if resolved != fix.Resolved {
 			t.Errorf("Reference %s should be resolved to %s but was %s", fix.Reference, fix.Resolved, resolved)
