@@ -5,10 +5,11 @@ go 1.20
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/alexflint/go-arg v1.4.3
-	github.com/cornelk/gotokit v0.0.0-20230328172145-d3782720580f
+	github.com/cornelk/gotokit v0.0.0-20230328222209-3e95e00ec750
 	github.com/gorilla/css v1.0.0
-	github.com/h2non/filetype v1.1.3
+	github.com/h2non/filetype v1.1.4-0.20230123234534-cfcd7d097bc4
 	github.com/headzoo/surf v1.0.1
+	github.com/stretchr/testify v1.8.2
 	golang.org/x/net v0.8.0
 )
 
@@ -23,7 +24,6 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
-	github.com/stretchr/testify v1.8.2 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/text v0.8.0 // indirect

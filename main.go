@@ -11,8 +11,6 @@ import (
 	"github.com/cornelk/gotokit/log"
 )
 
-const toolName = "goscrape"
-
 type arguments struct {
 	Exclude []string `arg:"-n,--include" help:"only include URLs with PERL Regular Expressions support"`
 	Include []string `arg:"-x,--exclude" help:"exclude URLs with PERL Regular Expressions support"`
@@ -112,6 +110,5 @@ func createLogger() (*log.Logger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("initializing logger: %w", err)
 	}
-	logger = logger.Named(toolName)
 	return logger, nil
 }
