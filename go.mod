@@ -3,7 +3,6 @@ module github.com/cornelk/goscrape
 go 1.20
 
 require (
-	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/alexflint/go-arg v1.4.3
 	github.com/cornelk/gotokit v0.0.0-20230329145859-cb335157df84
 	github.com/gorilla/css v1.0.0
@@ -14,6 +13,7 @@ require (
 )
 
 require (
+	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/alexflint/go-scalar v1.1.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

@@ -27,9 +27,10 @@ func TestFixFileReferences(t *testing.T) {
 	_, err = buf.Write(b)
 	require.NoError(t, err)
 
-	fixed, err := s.fixFileReferences(s.URL, buf)
+	html, fixed, err := s.fixURLReferences(s.URL, buf)
 	require.NoError(t, err)
+	assert.True(t, fixed)
 
 	expected := "<html lang=\"es\"><head></head><body><a href=\"wp-content/uploads/document.pdf\" rel=\"doc\">Guide</a>\n\n</body></html>"
-	assert.Equal(t, expected, fixed)
+	assert.Equal(t, expected, html)
 }

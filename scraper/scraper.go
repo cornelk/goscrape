@@ -219,13 +219,15 @@ func (s *Scraper) downloadURL(u *url.URL, currentDepth uint) {
 func (s *Scraper) storeDownload(u *url.URL, buf *bytes.Buffer, fileExtension string) {
 	isAPage := false
 	if fileExtension == "" {
-		html, err := s.fixFileReferences(u, buf)
+		html, fixed, err := s.fixURLReferences(u, buf)
 		if err != nil {
 			s.log.Error("Fixing file references failed", err, log.Stringer("url", u))
 			return
 		}
 
-		buf = bytes.NewBufferString(html)
+		if fixed {
+			buf = bytes.NewBufferString(html)
+		}
 		isAPage = true
 	}
 
