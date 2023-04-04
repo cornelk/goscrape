@@ -24,7 +24,7 @@ func (s *Scraper) checkImageForRecode(url *url.URL, buf *bytes.Buffer) *bytes.Bu
 		return buf
 	}
 
-	s.log.Debug("File type detected",
+	s.logger.Debug("File type detected",
 		log.String("type", kind.MIME.Type),
 		log.String("sub_type", kind.MIME.Subtype))
 
@@ -71,7 +71,7 @@ func (s *Scraper) recodeJPEG(url fmt.Stringer, b []byte) *bytes.Buffer {
 		return nil
 	}
 
-	s.log.Debug("Recoded JPEG",
+	s.logger.Debug("Recoded JPEG",
 		log.Stringer("url", url),
 		log.Int("size_original", len(b)),
 		log.Int("size_recoded", outBuf.Len()))
@@ -91,7 +91,7 @@ func (s *Scraper) recodePNG(url fmt.Stringer, b []byte) *bytes.Buffer {
 		return nil
 	}
 
-	s.log.Debug("Recoded PNG",
+	s.logger.Debug("Recoded PNG",
 		log.Stringer("URL", url),
 		log.Int("size_original", len(b)),
 		log.Int("size_recoded", outBuf.Len()))

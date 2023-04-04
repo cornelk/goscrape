@@ -60,13 +60,13 @@ func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {
 	if len(dir) < len(s.URL.Host) { // nothing to append if it is the root dir
 		dir = filepath.Join(".", s.URL.Host, dir)
 	}
-	s.log.Debug("Creating dir", log.String("path", dir))
+	s.logger.Debug("Creating dir", log.String("path", dir))
 	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	s.log.Debug("Creating file", log.String("path", filePath))
+	s.logger.Debug("Creating file", log.String("path", filePath))
 	f, err := os.Create(filePath)
 	if err != nil {
 		return err

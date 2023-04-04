@@ -108,7 +108,7 @@ func (s *Scraper) fixNodeURL(baseURL *url.URL, attributeName string, node *html.
 		return false
 	}
 
-	s.log.Debug("HTML Element relinked",
+	s.logger.Debug("HTML Element relinked",
 		log.String("url", nodeURL),
 		log.String("fixed_url", resolved))
 	attribute.Val = resolved

@@ -40,7 +40,7 @@ type Config struct {
 // Scraper contains all scraping data.
 type Scraper struct {
 	config  Config
-	log     *log.Logger
+	logger  *log.Logger
 	URL     *url.URL
 	browser *browser.Browser
 
@@ -108,7 +108,7 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 		config: cfg,
 
 		browser:   b,
-		log:       logger,
+		logger:    logger,
 		processed: make(map[string]struct{}),
 		URL:       u,
 		cssURLRe:  regexp.MustCompile(`^url\(['"]?(.*?)['"]?\)$`),
@@ -163,15 +163,17 @@ func (s *Scraper) Start() error {
 }
 
 func (s *Scraper) downloadURL(u *url.URL, currentDepth uint) {
-	s.log.Info("Downloading", log.Stringer("URL", u))
+	s.logger.Info("Downloading", log.Stringer("URL", u))
 
 	if err := s.browser.Open(u.String()); err != nil {
-		s.log.Error("Request failed", err, log.Stringer("url", u))
+		s.logger.Error("Request failed",
+			log.Stringer("url", u),
+			log.Err(err))
 		return
 	}
 
 	if c := s.browser.StatusCode(); c != http.StatusOK {
-		s.log.Error("Request failed", nil,
+		s.logger.Error("Request failed",
 			log.Stringer("url", u),
 			log.Int("http_status_code", c))
 		return
@@ -179,7 +181,9 @@ func (s *Scraper) downloadURL(u *url.URL, currentDepth uint) {
 
 	buf := &bytes.Buffer{}
 	if _, err := s.browser.Download(buf); err != nil {
-		s.log.Error("Downloading content failed", err, log.Stringer("url", u))
+		s.logger.Error("Downloading content failed",
+			log.Stringer("url", u),
+			log.Err(err))
 		return
 	}
 
@@ -221,7 +225,9 @@ func (s *Scraper) storeDownload(u *url.URL, buf *bytes.Buffer, fileExtension str
 	if fileExtension == "" {
 		html, fixed, err := s.fixURLReferences(u, buf)
 		if err != nil {
-			s.log.Error("Fixing file references failed", err, log.Stringer("url", u))
+			s.logger.Error("Fixing file references failed",
+				log.Stringer("url", u),
+				log.Err(err))
 			return
 		}
 
@@ -234,8 +240,9 @@ func (s *Scraper) storeDownload(u *url.URL, buf *bytes.Buffer, fileExtension str
 	filePath := s.GetFilePath(u, isAPage)
 	// always update html files, content might have changed
 	if err := s.writeFile(filePath, buf); err != nil {
-		s.log.Error("Writing to file failed", err,
+		s.logger.Error("Writing to file failed",
 			log.Stringer("URL", u),
-			log.String("file", filePath))
+			log.String("file", filePath),
+			log.Err(err))
 	}
 }
