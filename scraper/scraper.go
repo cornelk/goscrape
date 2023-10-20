@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -97,7 +98,7 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 	if cfg.Proxy != "" {
 		dialer, err := proxy.FromURL(proxyURL, proxy.Direct)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("creating proxy from URL: %w", err)
 		}
 		b.SetTransport(&http.Transport{
 			Dial: dialer.Dial,
@@ -143,7 +144,7 @@ func compileRegexps(regexps []string) ([]*regexp.Regexp, error) {
 func (s *Scraper) Start() error {
 	if s.config.OutputDirectory != "" {
 		if err := os.MkdirAll(s.config.OutputDirectory, os.ModePerm); err != nil {
-			return err
+			return fmt.Errorf("creating directory '%s': %w", s.config.OutputDirectory, err)
 		}
 	}
 

@@ -52,8 +52,7 @@ linters:
     - usestdlibvars # detect the possibility to use variables/constants from the Go standard library
     - wastedassign # finds wasted assignment statements
     - whitespace # detects leading and trailing whitespace
-
-#    - TODO wrapcheck # Checks that errors returned from external packages are wrapped
+    - wrapcheck # Checks that errors returned from external packages are wrapped
 
 issues:
   exclude-rules:
