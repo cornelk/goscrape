@@ -18,6 +18,7 @@ linters:
     - exportloopref # checks for pointers to enclosing loop variables
     - funlen # Tool for detection of long functions
     - gci # controls golang package import order and makes it always deterministic
+    - gocheckcompilerdirectives # Checks that go compiler directive comments (//go:) are valid
     - gocognit # Computes and checks the cognitive complexity of functions
     - goconst # Finds repeated strings that could be replaced by a constant
     - gocritic # Provides diagnostics that check for bugs, performance and style issues
@@ -27,6 +28,7 @@ linters:
     - gofmt # checks whether code was gofmt-ed
     - gosimple # Linter for Go source code that specializes in simplifying a code
     - govet # reports suspicious constructs, such as Printf calls with wrong arguments
+    - grouper # An analyzer to analyze expression groups
     - ineffassign # Detects when assignments to existing variables are not used
     - ireturn # accept Interfaces, Return Concrete Types
     - maintidx # measures the maintainability index of each function
@@ -36,6 +38,7 @@ linters:
     - nestif # Reports deeply nested if statements
     - nilerr # Finds the code that returns nil even if it checks that the error is not nil
     - nilnil # Checks that there is no simultaneous return of `nil` error and an invalid value
+    - perfsprint # Checks that fmt.Sprintf can be replaced with a faster alternative
     - prealloc # Finds slice declarations that could potentially be preallocated
     - predeclared # find code that shadows one of Go's predeclared identifiers
     - reassign # Checks that package variables are not reassigned
@@ -43,6 +46,7 @@ linters:
     - staticcheck # drop-in replacement of go vet
     - stylecheck # Stylecheck is a replacement for golint
     - tenv # detects using os.Setenv instead of t.Setenv
+    - testifylint # Checks usage of github.com/stretchr/testify
     - thelper # checks the consistency of test helpers
     - tparallel # detects inappropriate usage of t.Parallel()
     - typecheck # parses and type-checks Go code
