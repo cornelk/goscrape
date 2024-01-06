@@ -6,12 +6,12 @@ toolchain go1.21.1
 
 require (
 	github.com/alexflint/go-arg v1.4.3
-	github.com/cornelk/gotokit v0.0.0-20230925171802-a458bc0da5c9
-	github.com/gorilla/css v1.0.1-0.20230731074401-215f6f5e9a64
+	github.com/cornelk/gotokit v0.0.0-20231113161555-c89195215dd9
+	github.com/gorilla/css v1.0.1
 	github.com/h2non/filetype v1.1.4-0.20230123234534-cfcd7d097bc4
 	github.com/headzoo/surf v1.0.1
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/net v0.17.0
+	golang.org/x/net v0.19.0
 )
 
 require (
