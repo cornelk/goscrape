@@ -72,7 +72,7 @@ func (s *Scraper) recodeJPEG(url fmt.Stringer, b []byte) *bytes.Buffer {
 	}
 
 	s.logger.Debug("Recoded JPEG",
-		log.Stringer("url", url),
+		log.String("url", url.String()),
 		log.Int("size_original", len(b)),
 		log.Int("size_recoded", outBuf.Len()))
 	return outBuf
@@ -92,7 +92,7 @@ func (s *Scraper) recodePNG(url fmt.Stringer, b []byte) *bytes.Buffer {
 	}
 
 	s.logger.Debug("Recoded PNG",
-		log.Stringer("URL", url),
+		log.String("url", url.String()),
 		log.Int("size_original", len(b)),
 		log.Int("size_recoded", outBuf.Len()))
 	return outBuf

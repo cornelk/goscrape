@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/cornelk/goscrape/htmlindex"
 	"github.com/cornelk/gotokit/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/html"
 )
 
 func TestFixFileReferences(t *testing.T) {
@@ -27,7 +29,13 @@ func TestFixFileReferences(t *testing.T) {
 	_, err = buf.Write(b)
 	require.NoError(t, err)
 
-	html, fixed, err := s.fixURLReferences(s.URL, buf)
+	doc, err := html.Parse(buf)
+	require.NoError(t, err)
+
+	index := htmlindex.New()
+	index.Index(s.URL, doc)
+
+	html, fixed, err := s.fixURLReferences(s.URL, doc, index)
 	require.NoError(t, err)
 	assert.True(t, fixed)
 

@@ -6,26 +6,24 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/cornelk/goscrape/htmlindex"
 	"github.com/cornelk/gotokit/log"
 	"golang.org/x/net/html"
 )
 
 // fixURLReferences fixes URL references to point to relative file names.
-// It returns a bool that indicates that no reference needed to be fixed, in this case the returned HTML string
-// will be empty.
-func (s *Scraper) fixURLReferences(url *url.URL, buf *bytes.Buffer) (string, bool, error) {
-	relativeToRoot := s.urlRelativeToRoot(url)
-	doc, err := html.Parse(buf)
-	if err != nil {
-		return "", false, fmt.Errorf("parsing html: %w", err)
-	}
+// It returns a bool that indicates that no reference needed to be fixed,
+// in this case the returned HTML string will be empty.
+func (s *Scraper) fixURLReferences(url *url.URL, doc *html.Node,
+	index *htmlindex.Index) (string, bool, error) {
 
-	if !s.parseHTMLNodeChildren(url, relativeToRoot, doc) {
+	relativeToRoot := s.urlRelativeToRoot(url)
+	if !s.parseHTMLNodeChildren(url, relativeToRoot, index) {
 		return "", false, nil
 	}
 
 	var rendered bytes.Buffer
-	if err = html.Render(&rendered, doc); err != nil {
+	if err := html.Render(&rendered, doc); err != nil {
 		return "", false, fmt.Errorf("rendering html: %w", err)
 	}
 	return rendered.String(), true, nil
@@ -33,36 +31,45 @@ func (s *Scraper) fixURLReferences(url *url.URL, buf *bytes.Buffer) (string, boo
 
 // parseHTMLNodeChildren parses all HTML children of a HTML node recursively for nodes of interest that contain
 // URLS that need to be fixed to link to downloaded files. It returns whether any URLS have been fixed.
-func (s *Scraper) parseHTMLNodeChildren(baseURL *url.URL, relativeToRoot string, node *html.Node) bool {
+func (s *Scraper) parseHTMLNodeChildren(baseURL *url.URL, relativeToRoot string, index *htmlindex.Index) bool {
 	changed := false
 
-	for child := node.FirstChild; child != nil; child = child.NextSibling {
-		if child.Type != html.ElementNode {
-			continue
-		}
-
-		switch child.Data {
-		case "a":
-			if s.fixNodeURL(baseURL, "href", child, true, relativeToRoot) {
+	urls := index.Nodes("a")
+	for _, nodes := range urls {
+		for _, node := range nodes {
+			if s.fixNodeURL(baseURL, "href", node, true, relativeToRoot) {
 				changed = true
-			}
-		case "link":
-			if s.fixNodeURL(baseURL, "href", child, false, relativeToRoot) {
-				changed = true
-			}
-		case "img", "script":
-			if s.fixNodeURL(baseURL, "src", child, false, relativeToRoot) {
-				changed = true
-			}
-
-		default:
-			if node.FirstChild != nil {
-				if s.parseHTMLNodeChildren(baseURL, relativeToRoot, child) {
-					changed = true
-				}
 			}
 		}
 	}
+
+	urls = index.Nodes("link")
+	for _, nodes := range urls {
+		for _, node := range nodes {
+			if s.fixNodeURL(baseURL, "href", node, false, relativeToRoot) {
+				changed = true
+			}
+		}
+	}
+
+	urls = index.Nodes("img")
+	for _, nodes := range urls {
+		for _, node := range nodes {
+			if s.fixNodeURL(baseURL, "src", node, false, relativeToRoot) {
+				changed = true
+			}
+		}
+	}
+
+	urls = index.Nodes("script")
+	for _, nodes := range urls {
+		for _, node := range nodes {
+			if s.fixNodeURL(baseURL, "src", node, false, relativeToRoot) {
+				changed = true
+			}
+		}
+	}
+
 	return changed
 }
 
@@ -74,7 +81,7 @@ var ignoredURLPrefixes = []string{
 	"mailto:", // mail address
 }
 
-// fixURLReferences fixe the URL references of a HTML node to point to a relative file name.
+// fixURLReferences fixes the URL references of a HTML node to point to a relative file name.
 // It returns whether the URL bas been adjusted.
 func (s *Scraper) fixNodeURL(baseURL *url.URL, attributeName string, node *html.Node,
 	isHyperlink bool, relativeToRoot string) bool {

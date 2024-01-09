@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/alexflint/go-arg"
 	"github.com/cornelk/goscrape/scraper"
+	"github.com/cornelk/gotokit/app"
 	"github.com/cornelk/gotokit/buildinfo"
 	"github.com/cornelk/gotokit/env"
 	"github.com/cornelk/gotokit/log"
@@ -47,13 +49,15 @@ func main() {
 	var args arguments
 	arg.MustParse(&args)
 
-	if err := run(args); err != nil {
+	ctx := app.Context()
+
+	if err := run(ctx, args); err != nil {
 		fmt.Printf("Execution error: %s\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(args arguments) error {
+func run(ctx context.Context, args arguments) error {
 	if len(args.URLs) == 0 {
 		return nil
 	}
@@ -100,8 +104,8 @@ func run(args arguments) error {
 			return fmt.Errorf("initializing scraper: %w", err)
 		}
 
-		logger.Info("Scraping", log.Stringer("URL", sc.URL))
-		if err = sc.Start(); err != nil {
+		logger.Info("Scraping", log.String("url", sc.URL.String()))
+		if err = sc.Start(ctx); err != nil {
 			return fmt.Errorf("scraping '%s': %w", sc.URL, err)
 		}
 	}

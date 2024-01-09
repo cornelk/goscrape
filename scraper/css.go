@@ -9,7 +9,6 @@ import (
 
 	"github.com/cornelk/gotokit/log"
 	"github.com/gorilla/css/scanner"
-	"github.com/headzoo/surf/browser"
 )
 
 func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer {
@@ -42,8 +41,7 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 		}
 		u = url.ResolveReference(u)
 
-		img := browser.NewImageAsset(u, "", "", "")
-		s.imagesQueue = append(s.imagesQueue, &img.DownloadableAsset)
+		s.imagesQueue = append(s.imagesQueue, u)
 
 		cssPath := *url
 		cssPath.Path = path.Dir(cssPath.Path) + "/"

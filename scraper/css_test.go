@@ -37,7 +37,7 @@ func TestCheckCSSForURLs(t *testing.T) {
 
 		if expected == "" {
 			if len(s.imagesQueue) != 0 {
-				t.Errorf("CSS %s should not result in an image in queue with URL %s", input, s.imagesQueue[0].URL.String())
+				t.Errorf("CSS %s should not result in an image in queue with URL %s", input, s.imagesQueue[0].String())
 			}
 			continue
 		}
@@ -46,7 +46,7 @@ func TestCheckCSSForURLs(t *testing.T) {
 			t.Errorf("CSS %s did not result in an image in queue", input)
 		}
 
-		res := s.imagesQueue[0].URL.String()
+		res := s.imagesQueue[0].String()
 		if res != expected {
 			t.Errorf("URL %s should have been %s but was %s", input, expected, res)
 		}

@@ -12,7 +12,7 @@ func (s *Scraper) shouldPageBeDownloaded(url *url.URL, currentDepth uint) bool {
 		return false
 	}
 	if url.Host != s.URL.Host {
-		s.logger.Debug("Skipping external host page", log.Stringer("url", url))
+		s.logger.Debug("Skipping external host page", log.String("url", url.String()))
 		return false
 	}
 
@@ -25,13 +25,13 @@ func (s *Scraper) shouldPageBeDownloaded(url *url.URL, currentDepth uint) bool {
 		if url.Fragment != "" {
 			return false
 		}
-		s.logger.Debug("Skipping already checked page", log.Stringer("url", url))
+		s.logger.Debug("Skipping already checked page", log.String("url", url.String()))
 		return false
 	}
 
 	s.processed[p] = struct{}{}
 	if s.config.MaxDepth != 0 && currentDepth == s.config.MaxDepth {
-		s.logger.Debug("Skipping too deep level page", log.Stringer("url", url))
+		s.logger.Debug("Skipping too deep level page", log.String("url", url.String()))
 		return false
 	}
 
@@ -42,7 +42,7 @@ func (s *Scraper) shouldPageBeDownloaded(url *url.URL, currentDepth uint) bool {
 		return false
 	}
 
-	s.logger.Debug("New page to download", log.Stringer("url", url))
+	s.logger.Debug("New page to download", log.String("url", url.String()))
 	return true
 }
 
@@ -54,7 +54,7 @@ func (s *Scraper) isURLIncluded(url *url.URL) bool {
 	for _, re := range s.includes {
 		if re.MatchString(url.Path) {
 			s.logger.Info("Including URL",
-				log.Stringer("url", url),
+				log.String("url", url.String()),
 				log.Stringer("included_expression", re))
 			return true
 		}
@@ -70,7 +70,7 @@ func (s *Scraper) isURLExcluded(url *url.URL) bool {
 	for _, re := range s.excludes {
 		if re.MatchString(url.Path) {
 			s.logger.Info("Skipping URL",
-				log.Stringer("url", url),
+				log.String("url", url.String()),
 				log.Stringer("excluded_expression", re))
 			return true
 		}
