@@ -151,6 +151,8 @@ func (s *Scraper) Start(ctx context.Context) error {
 func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth uint) {
 	buf := &bytes.Buffer{}
 
+	s.logger.Info("Downloading webpage", log.String("url", u.String()))
+
 	respURL, err := s.sendHTTPRequest(ctx, u, buf)
 	if err != nil {
 		s.logger.Error("Processing HTTP Request failed",
@@ -208,8 +210,6 @@ func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth 
 }
 
 func (s *Scraper) sendHTTPRequest(ctx context.Context, u *url.URL, buf *bytes.Buffer) (*url.URL, error) {
-	s.logger.Info("Downloading", log.String("url", u.String()))
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating HTTP request: %w", err)

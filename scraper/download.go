@@ -63,7 +63,7 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 		return // exists already on disk
 	}
 
-	s.logger.Info("Downloading", log.String("url", urlFull))
+	s.logger.Info("Downloading asset", log.String("url", urlFull))
 
 	buf := &bytes.Buffer{}
 	_, err := s.sendHTTPRequest(ctx, u, buf)
