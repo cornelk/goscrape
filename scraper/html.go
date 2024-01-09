@@ -11,14 +11,22 @@ import (
 	"golang.org/x/net/html"
 )
 
+// ignoredURLPrefixes contains a list of URL prefixes that do not need to bo adjusted.
+var ignoredURLPrefixes = []string{
+	"#",       // anchor
+	"/#",      // anchor
+	"data:",   // embedded data
+	"mailto:", // mail address
+}
+
 // fixURLReferences fixes URL references to point to relative file names.
 // It returns a bool that indicates that no reference needed to be fixed,
 // in this case the returned HTML string will be empty.
 func (s *Scraper) fixURLReferences(url *url.URL, doc *html.Node,
 	index *htmlindex.Index) (string, bool, error) {
 
-	relativeToRoot := s.urlRelativeToRoot(url)
-	if !s.parseHTMLNodeChildren(url, relativeToRoot, index) {
+	relativeToRoot := urlRelativeToRoot(url)
+	if !s.fixHTMLNodeURLs(url, relativeToRoot, index) {
 		return "", false, nil
 	}
 
@@ -29,9 +37,9 @@ func (s *Scraper) fixURLReferences(url *url.URL, doc *html.Node,
 	return rendered.String(), true, nil
 }
 
-// parseHTMLNodeChildren parses all HTML children of a HTML node recursively for nodes of interest that contain
-// URLS that need to be fixed to link to downloaded files. It returns whether any URLS have been fixed.
-func (s *Scraper) parseHTMLNodeChildren(baseURL *url.URL, relativeToRoot string, index *htmlindex.Index) bool {
+// fixHTMLNodeURLs processes all HTML nodes that contain URLs that need to be fixed
+// to link to downloaded files. It returns whether any URLS have been fixed.
+func (s *Scraper) fixHTMLNodeURLs(baseURL *url.URL, relativeToRoot string, index *htmlindex.Index) bool {
 	changed := false
 
 	urls := index.Nodes("a")
@@ -73,14 +81,6 @@ func (s *Scraper) parseHTMLNodeChildren(baseURL *url.URL, relativeToRoot string,
 	return changed
 }
 
-// ignoredURLPrefixes contains a list of URL prefixes that do not need to bo adjusted.
-var ignoredURLPrefixes = []string{
-	"#",       // anchor
-	"/#",      // anchor
-	"data:",   // embedded data
-	"mailto:", // mail address
-}
-
 // fixURLReferences fixes the URL references of a HTML node to point to a relative file name.
 // It returns whether the URL bas been adjusted.
 func (s *Scraper) fixNodeURL(baseURL *url.URL, attributeName string, node *html.Node,
@@ -110,7 +110,7 @@ func (s *Scraper) fixNodeURL(baseURL *url.URL, attributeName string, node *html.
 		}
 	}
 
-	resolved := s.resolveURL(baseURL, nodeURL, isHyperlink, relativeToRoot)
+	resolved := resolveURL(baseURL, nodeURL, s.URL.Host, isHyperlink, relativeToRoot)
 	if nodeURL == resolved { // no change
 		return false
 	}

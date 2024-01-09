@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/cornelk/gotokit/log"
 	"github.com/gorilla/css/scanner"
 )
+
+var cssURLRe = regexp.MustCompile(`^url\(['"]?(.*?)['"]?\)$`)
 
 func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer {
 	urls := make(map[string]string)
@@ -25,7 +28,7 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 			continue
 		}
 
-		match := s.cssURLRe.FindStringSubmatch(token.Value)
+		match := cssURLRe.FindStringSubmatch(token.Value)
 		if match == nil {
 			continue
 		}
@@ -37,7 +40,10 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 
 		u, err := url.Parse(src)
 		if err != nil {
-			return buf
+			s.logger.Error("Parsing URL failed",
+				log.String("url", src),
+				log.Err(err))
+			continue
 		}
 		u = url.ResolveReference(u)
 
@@ -45,7 +51,7 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 
 		cssPath := *url
 		cssPath.Path = path.Dir(cssPath.Path) + "/"
-		resolved := s.resolveURL(&cssPath, src, false, "")
+		resolved := resolveURL(&cssPath, src, s.URL.Host, false, "")
 		urls[token.Value] = resolved
 	}
 

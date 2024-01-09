@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-// RemoveAnchor removes anchors from URLS.
-func (s *Scraper) RemoveAnchor(path string) string {
+// removeAnchor removes anchors from URLS.
+func removeAnchor(path string) string {
 	sl := strings.LastIndexByte(path, '/')
 	if sl == -1 {
 		return path
@@ -20,14 +20,14 @@ func (s *Scraper) RemoveAnchor(path string) string {
 	return path[:sl+an+1]
 }
 
-func (s *Scraper) resolveURL(base *url.URL, reference string, isHyperlink bool, relativeToRoot string) string {
+func resolveURL(base *url.URL, reference, mainPageHost string, isHyperlink bool, relativeToRoot string) string {
 	ur, err := url.Parse(reference)
 	if err != nil {
 		return ""
 	}
 
 	var resolvedURL *url.URL
-	if ur.Host != "" && ur.Host != s.URL.Host {
+	if ur.Host != "" && ur.Host != mainPageHost {
 		if isHyperlink { // do not change links to external websites
 			return reference
 		}
@@ -36,14 +36,14 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, isHyperlink bool, 
 		resolvedURL.Path = filepath.Join("_"+ur.Host, resolvedURL.Path)
 	} else {
 		if isHyperlink {
-			ur.Path = GetPageFilePath(ur)
+			ur.Path = getPageFilePath(ur)
 			resolvedURL = base.ResolveReference(ur)
 		} else {
 			resolvedURL = base.ResolveReference(ur)
 		}
 	}
 
-	if resolvedURL.Host == s.URL.Host {
+	if resolvedURL.Host == mainPageHost {
 		resolvedURL.Path = urlRelativeToOther(resolvedURL, base)
 		relativeToRoot = ""
 	}
@@ -77,7 +77,7 @@ func (s *Scraper) resolveURL(base *url.URL, reference string, isHyperlink bool, 
 	return resolved
 }
 
-func (s *Scraper) urlRelativeToRoot(url *url.URL) string {
+func urlRelativeToRoot(url *url.URL) string {
 	var rel string
 	splits := strings.Split(url.Path, "/")
 	for i := range splits {
@@ -90,7 +90,7 @@ func (s *Scraper) urlRelativeToRoot(url *url.URL) string {
 
 func urlRelativeToOther(src, base *url.URL) string {
 	srcSplits := strings.Split(src.Path, "/")
-	baseSplits := strings.Split(GetPageFilePath(base), "/")
+	baseSplits := strings.Split(getPageFilePath(base), "/")
 
 	for {
 		if len(srcSplits) == 0 || len(baseSplits) == 0 {

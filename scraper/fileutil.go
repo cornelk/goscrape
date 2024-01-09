@@ -17,35 +17,11 @@ const (
 	PageDirIndex = "index" + PageExtension
 )
 
-// GetPageFilePath returns a filename for a URL that represents a page.
-func GetPageFilePath(url *url.URL) string {
-	fileName := url.Path
-
-	// root of domain will be index.html
-	switch {
-	case fileName == "" || fileName == "/":
-		fileName = PageDirIndex
-		// directory index will be index.html in the directory
-
-	case fileName[len(fileName)-1] == '/':
-		fileName += PageDirIndex
-
-	default:
-		ext := filepath.Ext(fileName)
-		// if file extension is missing add .html, otherwise keep the existing file extension
-		if ext == "" {
-			fileName += PageExtension
-		}
-	}
-
-	return fileName
-}
-
-// GetFilePath returns a file path for a URL to store the URL content in.
-func (s *Scraper) GetFilePath(url *url.URL, isAPage bool) string {
+// getFilePath returns a file path for a URL to store the URL content in.
+func (s *Scraper) getFilePath(url *url.URL, isAPage bool) string {
 	fileName := url.Path
 	if isAPage {
-		fileName = GetPageFilePath(url)
+		fileName = getPageFilePath(url)
 	}
 
 	var externalHost string
@@ -85,4 +61,28 @@ func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {
 		return fmt.Errorf("closing file: %w", err)
 	}
 	return nil
+}
+
+// getPageFilePath returns a filename for a URL that represents a page.
+func getPageFilePath(url *url.URL) string {
+	fileName := url.Path
+
+	// root of domain will be index.html
+	switch {
+	case fileName == "" || fileName == "/":
+		fileName = PageDirIndex
+		// directory index will be index.html in the directory
+
+	case fileName[len(fileName)-1] == '/':
+		fileName += PageDirIndex
+
+	default:
+		ext := filepath.Ext(fileName)
+		// if file extension is missing add .html, otherwise keep the existing file extension
+		if ext == "" {
+			fileName += PageExtension
+		}
+	}
+
+	return fileName
 }

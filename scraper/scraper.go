@@ -48,7 +48,6 @@ type Scraper struct {
 	auth   string
 	client *http.Client
 
-	cssURLRe *regexp.Regexp
 	includes []*regexp.Regexp
 	excludes []*regexp.Regexp
 
@@ -118,7 +117,6 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 
 		client: client,
 
-		cssURLRe: regexp.MustCompile(`^url\(['"]?(.*?)['"]?\)$`),
 		includes: includes,
 		excludes: excludes,
 
@@ -130,27 +128,6 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 	}
 
 	return s, nil
-}
-
-// compileRegexps compiles the given regex strings to regular expressions
-// to be used in the include and exclude filters.
-func compileRegexps(regexps []string) ([]*regexp.Regexp, error) {
-	var errs []error
-	var compiled []*regexp.Regexp
-
-	for _, exp := range regexps {
-		re, err := regexp.Compile(exp)
-		if err == nil {
-			compiled = append(compiled, re)
-		} else {
-			errs = append(errs, err)
-		}
-	}
-
-	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
-	}
-	return compiled, nil
 }
 
 // Start starts the scraping.
@@ -287,7 +264,7 @@ func (s *Scraper) storeDownload(u *url.URL, buf *bytes.Buffer, doc *html.Node,
 		isAPage = true
 	}
 
-	filePath := s.GetFilePath(u, isAPage)
+	filePath := s.getFilePath(u, isAPage)
 	// always update html files, content might have changed
 	if err := s.writeFile(filePath, buf); err != nil {
 		s.logger.Error("Writing to file failed",
@@ -295,4 +272,25 @@ func (s *Scraper) storeDownload(u *url.URL, buf *bytes.Buffer, doc *html.Node,
 			log.String("file", filePath),
 			log.Err(err))
 	}
+}
+
+// compileRegexps compiles the given regex strings to regular expressions
+// to be used in the include and exclude filters.
+func compileRegexps(regexps []string) ([]*regexp.Regexp, error) {
+	var errs []error
+	var compiled []*regexp.Regexp
+
+	for _, exp := range regexps {
+		re, err := regexp.Compile(exp)
+		if err == nil {
+			compiled = append(compiled, re)
+		} else {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+	return compiled, nil
 }

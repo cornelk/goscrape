@@ -58,7 +58,7 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 		return
 	}
 
-	filePath := s.GetFilePath(u, false)
+	filePath := s.getFilePath(u, false)
 	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
 		return // exists already on disk
 	}

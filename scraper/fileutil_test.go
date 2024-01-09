@@ -37,7 +37,7 @@ func TestGetFilePath(t *testing.T) {
 			t.Errorf("URL parse failed: %v", err)
 		}
 
-		output := s.GetFilePath(URL, true)
+		output := s.getFilePath(URL, true)
 		if output != fix.ExpectedFilePath {
 			t.Errorf("URL %s should have become file %s but was %s", fix.DownloadURL, fix.ExpectedFilePath, output)
 		}

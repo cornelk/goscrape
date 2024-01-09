@@ -3,17 +3,9 @@ package scraper
 import (
 	"net/url"
 	"testing"
-
-	"github.com/cornelk/gotokit/log"
 )
 
 func TestRemoveAnchor(t *testing.T) {
-	logger := log.NewTestLogger(t)
-	s, err := New(logger, Config{})
-	if err != nil {
-		t.Errorf("Scraper New failed: %v", err)
-	}
-
 	var fixtures = map[string]string{
 		"github.com":                 "github.com",
 		"https://github.com/":        "https://github.com/",
@@ -21,24 +13,14 @@ func TestRemoveAnchor(t *testing.T) {
 	}
 
 	for input, expected := range fixtures {
-		output := s.RemoveAnchor(input)
+		output := removeAnchor(input)
 		if output != expected {
 			t.Errorf("URL %s should have been %s but was %s", input, expected, output)
 		}
 	}
 }
 
-func Test_resolveURL(t *testing.T) {
-	logger := log.NewTestLogger(t)
-	cfg := Config{
-		URL: "https://petpic.xyz/earth/",
-	}
-
-	s, err := New(logger, cfg)
-	if err != nil {
-		t.Errorf("Scraper New failed: %v", err)
-	}
-
+func TestResolveURL(t *testing.T) {
 	type filePathFixture struct {
 		BaseURL        url.URL
 		Reference      string
@@ -68,7 +50,7 @@ func Test_resolveURL(t *testing.T) {
 	}
 
 	for _, fix := range fixtures {
-		resolved := s.resolveURL(&fix.BaseURL, fix.Reference, fix.IsHyperlink, fix.RelativeToRoot)
+		resolved := resolveURL(&fix.BaseURL, fix.Reference, URL.Host, fix.IsHyperlink, fix.RelativeToRoot)
 
 		if resolved != fix.Resolved {
 			t.Errorf("Reference %s should be resolved to %s but was %s", fix.Reference, fix.Resolved, resolved)
@@ -101,14 +83,6 @@ func Test_urlRelativeToOther(t *testing.T) {
 }
 
 func Test_urlRelativeToRoot(t *testing.T) {
-	logger := log.NewTestLogger(t)
-	cfg := Config{
-		URL: "https://localhost",
-	}
-	s, err := New(logger, cfg)
-	if err != nil {
-		t.Errorf("Scraper New failed: %v", err)
-	}
 	type urlFixture struct {
 		SrcURL   url.URL
 		Expected string
@@ -122,7 +96,7 @@ func Test_urlRelativeToRoot(t *testing.T) {
 	}
 
 	for _, fix := range fixtures {
-		relativeURL := s.urlRelativeToRoot(&fix.SrcURL)
+		relativeURL := urlRelativeToRoot(&fix.SrcURL)
 		if relativeURL != fix.Expected {
 			t.Errorf("URL %s should have gotten relative root path %s but was %s", fix.SrcURL.Path, fix.Expected, relativeURL)
 		}
