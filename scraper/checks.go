@@ -13,11 +13,6 @@ func (s *Scraper) shouldURLBeDownloaded(url *url.URL, currentDepth uint, isAsset
 		return false
 	}
 
-	if !isAsset && url.Host != s.URL.Host {
-		s.logger.Debug("Skipping external host page", log.String("url", url.String()))
-		return false
-	}
-
 	p := url.String()
 	if url.Host == s.URL.Host {
 		p = url.Path
@@ -30,15 +25,21 @@ func (s *Scraper) shouldURLBeDownloaded(url *url.URL, currentDepth uint, isAsset
 		if url.Fragment != "" {
 			return false
 		}
-		s.logger.Debug("Skipping already checked URL", log.String("url", url.String()))
 		return false
 	}
 
 	s.processed[p] = struct{}{}
 
-	if !isAsset && s.config.MaxDepth != 0 && currentDepth == s.config.MaxDepth {
-		s.logger.Debug("Skipping too deep level page", log.String("url", url.String()))
-		return false
+	if !isAsset {
+		if url.Host != s.URL.Host {
+			s.logger.Debug("Skipping external host page", log.String("url", url.String()))
+			return false
+		}
+
+		if s.config.MaxDepth != 0 && currentDepth == s.config.MaxDepth {
+			s.logger.Debug("Skipping too deep level page", log.String("url", url.String()))
+			return false
+		}
 	}
 
 	if s.includes != nil && !s.isURLIncluded(url) {
