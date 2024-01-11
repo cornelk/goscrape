@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -24,7 +25,7 @@ type arguments struct {
 	Exclude []string `arg:"-n,--include" help:"only include URLs with PERL Regular Expressions support"`
 	Include []string `arg:"-x,--exclude" help:"exclude URLs with PERL Regular Expressions support"`
 	Output  string   `arg:"-o,--output" help:"output directory to write files to"`
-	URLs    []string `arg:"positional,required"`
+	URLs    []string `arg:"positional"`
 
 	Depth        int64 `arg:"-d,--depth" help:"download depth, 0 for unlimited" default:"10"`
 	ImageQuality int64 `arg:"-i,--imagequality" help:"image quality, 0 to disable reencoding"`
@@ -46,15 +47,45 @@ func (arguments) Version() string {
 }
 
 func main() {
-	var args arguments
-	arg.MustParse(&args)
+	args, err := readArguments()
+	if err != nil {
+		fmt.Printf("Reading arguments failed: %s\n", err)
+		os.Exit(1)
+	}
 
 	ctx := app.Context()
-
 	if err := run(ctx, args); err != nil {
 		fmt.Printf("Execution error: %s\n", err)
 		os.Exit(1)
 	}
+}
+
+func readArguments() (arguments, error) {
+	var args arguments
+	parser, err := arg.NewParser(arg.Config{}, &args)
+	if err != nil {
+		return arguments{}, fmt.Errorf("creating argument parser: %w", err)
+	}
+
+	if err = parser.Parse(os.Args[1:]); err != nil {
+		switch {
+		case errors.Is(err, arg.ErrHelp):
+			parser.WriteHelp(os.Stdout)
+			os.Exit(0)
+		case errors.Is(err, arg.ErrVersion):
+			fmt.Println(args.Version())
+			os.Exit(0)
+		}
+
+		return arguments{}, fmt.Errorf("parsing arguments: %w", err)
+	}
+
+	if len(args.URLs) == 0 {
+		parser.WriteHelp(os.Stdout)
+		os.Exit(0)
+	}
+
+	return args, nil
 }
 
 func run(ctx context.Context, args arguments) error {
