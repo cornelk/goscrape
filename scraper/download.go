@@ -46,15 +46,8 @@ func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index
 // downloadAsset downloads an asset if it does not exist on disk yet.
 func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor assetProcessor) {
 	urlFull := u.String()
-	if _, ok := s.processed[u.String()]; ok {
-		return // was already processed
-	}
-	s.processed[urlFull] = struct{}{}
 
-	if s.includes != nil && !s.isURLIncluded(u) {
-		return
-	}
-	if s.excludes != nil && s.isURLExcluded(u) {
+	if !s.shouldURLBeDownloaded(u, 0, true) {
 		return
 	}
 

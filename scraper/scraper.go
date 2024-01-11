@@ -199,7 +199,7 @@ func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth 
 	}
 
 	for _, ur := range references {
-		if s.shouldPageBeDownloaded(ur, currentDepth) {
+		if s.shouldURLBeDownloaded(ur, currentDepth, false) {
 			toScrape = append(toScrape, ur)
 		}
 	}
