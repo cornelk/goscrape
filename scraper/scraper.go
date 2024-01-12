@@ -146,19 +146,23 @@ func (s *Scraper) Start(ctx context.Context) error {
 		return errors.New("start page is excluded from downloading")
 	}
 
-	s.downloadWebpage(ctx, s.URL, 0)
+	if err := s.downloadWebpage(ctx, s.URL, 0); err != nil {
+		return err
+	}
 
 	for len(s.webPageQueue) > 0 {
 		ur := s.webPageQueue[0]
 		s.webPageQueue = s.webPageQueue[1:]
 		currentDepth := s.webPageQueueDepth[ur.String()]
-		s.downloadWebpage(ctx, ur, currentDepth+1)
+		if err := s.downloadWebpage(ctx, ur, currentDepth+1); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth uint) {
+func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth uint) error {
 	buf := &bytes.Buffer{}
 
 	s.logger.Info("Downloading webpage", log.String("url", u.String()))
@@ -168,7 +172,7 @@ func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth 
 		s.logger.Error("Processing HTTP Request failed",
 			log.String("url", u.String()),
 			log.Err(err))
-		return
+		return err
 	}
 
 	fileExtension := ""
@@ -189,7 +193,7 @@ func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth 
 		s.logger.Error("Parsing HTML failed",
 			log.String("url", u.String()),
 			log.Err(err))
-		return
+		return fmt.Errorf("parsing HTML: %w", err)
 	}
 
 	index := htmlindex.New()
@@ -197,7 +201,9 @@ func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth 
 
 	s.storeDownload(u, buf, doc, index, fileExtension)
 
-	s.downloadReferences(ctx, index)
+	if err := s.downloadReferences(ctx, index); err != nil {
+		return err
+	}
 
 	// check first and download afterward to not hit max depth limit for
 	// start page links because of recursive linking
@@ -213,6 +219,8 @@ func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth 
 			s.webPageQueueDepth[ur.String()] = currentDepth
 		}
 	}
+
+	return nil
 }
 
 func (s *Scraper) sendHTTPRequest(ctx context.Context, u *url.URL, buf *bytes.Buffer) (*url.URL, error) {

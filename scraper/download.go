@@ -3,6 +3,7 @@ package scraper
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/url"
 	"os"
 
@@ -14,7 +15,7 @@ import (
 // a downloaded file content before it will be stored on disk.
 type assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 
-func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index) {
+func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index) error {
 	references, err := index.URLs("img")
 	if err != nil {
 		s.logger.Error("Getting img nodes URLs failed", log.Err(err))
@@ -26,7 +27,9 @@ func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index
 		s.logger.Error("Getting link nodes URLs failed", log.Err(err))
 	}
 	for _, ur := range references {
-		s.downloadAsset(ctx, ur, s.checkCSSForUrls)
+		if err := s.downloadAsset(ctx, ur, s.checkCSSForUrls); err != nil {
+			return err
+		}
 	}
 
 	references, err = index.URLs("script")
@@ -34,26 +37,31 @@ func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index
 		s.logger.Error("Getting script nodes URLs failed", log.Err(err))
 	}
 	for _, ur := range references {
-		s.downloadAsset(ctx, ur, nil)
+		if err := s.downloadAsset(ctx, ur, nil); err != nil {
+			return err
+		}
 	}
 
 	for _, image := range s.imagesQueue {
-		s.downloadAsset(ctx, image, s.checkImageForRecode)
+		if err := s.downloadAsset(ctx, image, s.checkImageForRecode); err != nil {
+			return err
+		}
 	}
 	s.imagesQueue = nil
+	return nil
 }
 
 // downloadAsset downloads an asset if it does not exist on disk yet.
-func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor assetProcessor) {
+func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor assetProcessor) error {
 	urlFull := u.String()
 
 	if !s.shouldURLBeDownloaded(u, 0, true) {
-		return
+		return nil
 	}
 
 	filePath := s.getFilePath(u, false)
 	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-		return // exists already on disk
+		return nil // exists already on disk
 	}
 
 	s.logger.Info("Downloading asset", log.String("url", urlFull))
@@ -64,7 +72,7 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 		s.logger.Error("Downloading asset failed",
 			log.String("url", urlFull),
 			log.Err(err))
-		return
+		return fmt.Errorf("downloading asset: %w", err)
 	}
 
 	if processor != nil {
@@ -77,4 +85,6 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 			log.String("file", filePath),
 			log.Err(err))
 	}
+
+	return nil
 }

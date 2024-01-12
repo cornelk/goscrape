@@ -137,6 +137,10 @@ func run(ctx context.Context, args arguments) error {
 
 		logger.Info("Scraping", log.String("url", sc.URL.String()))
 		if err = sc.Start(ctx); err != nil {
+			if errors.Is(err, context.Canceled) {
+				os.Exit(0)
+			}
+
 			return fmt.Errorf("scraping '%s': %w", sc.URL, err)
 		}
 	}
