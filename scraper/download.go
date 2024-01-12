@@ -3,6 +3,7 @@ package scraper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -27,7 +28,7 @@ func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index
 		s.logger.Error("Getting link nodes URLs failed", log.Err(err))
 	}
 	for _, ur := range references {
-		if err := s.downloadAsset(ctx, ur, s.checkCSSForUrls); err != nil {
+		if err := s.downloadAsset(ctx, ur, s.checkCSSForUrls); err != nil && errors.Is(err, context.Canceled) {
 			return err
 		}
 	}
@@ -37,13 +38,13 @@ func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index
 		s.logger.Error("Getting script nodes URLs failed", log.Err(err))
 	}
 	for _, ur := range references {
-		if err := s.downloadAsset(ctx, ur, nil); err != nil {
+		if err := s.downloadAsset(ctx, ur, nil); err != nil && errors.Is(err, context.Canceled) {
 			return err
 		}
 	}
 
 	for _, image := range s.imagesQueue {
-		if err := s.downloadAsset(ctx, image, s.checkImageForRecode); err != nil {
+		if err := s.downloadAsset(ctx, image, s.checkImageForRecode); err != nil && errors.Is(err, context.Canceled) {
 			return err
 		}
 	}

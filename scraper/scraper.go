@@ -154,7 +154,7 @@ func (s *Scraper) Start(ctx context.Context) error {
 		ur := s.webPageQueue[0]
 		s.webPageQueue = s.webPageQueue[1:]
 		currentDepth := s.webPageQueueDepth[ur.String()]
-		if err := s.downloadWebpage(ctx, ur, currentDepth+1); err != nil {
+		if err := s.downloadWebpage(ctx, ur, currentDepth+1); err != nil && errors.Is(err, context.Canceled) {
 			return err
 		}
 	}
