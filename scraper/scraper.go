@@ -54,7 +54,9 @@ type Scraper struct {
 	// key is the URL of page or asset
 	processed map[string]struct{}
 
-	imagesQueue []*url.URL
+	imagesQueue       []*url.URL
+	webPageQueue      []*url.URL
+	webPageQueueDepth map[string]uint
 }
 
 // New creates a new Scraper instance.
@@ -120,7 +122,9 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 		includes: includes,
 		excludes: excludes,
 
-		processed: make(map[string]struct{}),
+		processed: map[string]struct{}{},
+
+		webPageQueueDepth: map[string]uint{},
 	}
 
 	if s.config.Username != "" {
@@ -138,13 +142,19 @@ func (s *Scraper) Start(ctx context.Context) error {
 		}
 	}
 
-	p := s.URL.Path
-	if p == "" {
-		p = "/"
+	if !s.shouldURLBeDownloaded(s.URL, 0, false) {
+		return errors.New("start page is excluded from downloading")
 	}
-	s.processed[p] = struct{}{}
 
 	s.downloadWebpage(ctx, s.URL, 0)
+
+	for len(s.webPageQueue) > 0 {
+		ur := s.webPageQueue[0]
+		s.webPageQueue = s.webPageQueue[1:]
+		currentDepth := s.webPageQueueDepth[ur.String()]
+		s.downloadWebpage(ctx, ur, currentDepth+1)
+	}
+
 	return nil
 }
 
@@ -189,7 +199,6 @@ func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth 
 
 	s.downloadReferences(ctx, index)
 
-	var toScrape []*url.URL
 	// check first and download afterward to not hit max depth limit for
 	// start page links because of recursive linking
 	// a hrefs
@@ -200,12 +209,9 @@ func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth 
 
 	for _, ur := range references {
 		if s.shouldURLBeDownloaded(ur, currentDepth, false) {
-			toScrape = append(toScrape, ur)
+			s.webPageQueue = append(s.webPageQueue, ur)
+			s.webPageQueueDepth[ur.String()] = currentDepth
 		}
-	}
-
-	for _, URL := range toScrape {
-		s.downloadWebpage(ctx, URL, currentDepth+1)
 	}
 }
 
