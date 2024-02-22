@@ -18,7 +18,7 @@ builds:
 dockers:
   - id: goscrape
     image_templates:
-      - "ghcr.io/aorfanos/goscrape:{{ .Version }}" 
+      - "ghcr.io/cornelk/goscrape:{{ .Version }}" 
 
 universal_binaries:
   - replace: false
