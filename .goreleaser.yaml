@@ -15,6 +15,11 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate }}
 
+dockers:
+  - id: goscrape
+    image_templates:
+      - "ghcr.io/cornelk/goscrape:{{ .Version }}" 
+
 universal_binaries:
   - replace: false
 
