@@ -35,8 +35,9 @@ type Config struct {
 	Username        string
 	Password        string
 
-	UserAgent string
+	Header    http.Header
 	Proxy     string
+	UserAgent string
 }
 
 // Scraper contains all scraping data.
@@ -232,6 +233,12 @@ func (s *Scraper) sendHTTPRequest(ctx context.Context, u *url.URL, buf *bytes.Bu
 	req.Header.Set("User-Agent", s.config.UserAgent)
 	if s.auth != "" {
 		req.Header.Set("Authorization", s.auth)
+	}
+
+	for key, values := range s.config.Header {
+		for _, value := range values {
+			req.Header.Set(key, value)
+		}
 	}
 
 	resp, err := s.client.Do(req)
