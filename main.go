@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -34,9 +35,12 @@ type arguments struct {
 	Serve      string `arg:"-s,--serve" help:"serve the website using a webserver"`
 	ServerPort int16  `arg:"-r,--serverport" help:"port to use for the webserver" default:"8080"`
 
+	CookieFile     string `arg:"-c,--cookiefile" help:"file containing the cookie content"`
+	SaveCookieFile string `arg:"--savecookiefile" help:"file to save the cookie content"`
+
 	Headers   []string `arg:"-h,--header" help:"HTTP header to use for scraping"`
 	Proxy     string   `arg:"-p,--proxy" help:"HTTP proxy to use for scraping"`
-	User      string   `arg:"-u,--user" help:"user[:password] to use for authentication"`
+	User      string   `arg:"-u,--user" help:"user[:password] to use for HTTP authentication"`
 	UserAgent string   `arg:"-a,--useragent" help:"user agent to use for scraping"`
 
 	Verbose bool `arg:"-v,--verbose" help:"verbose output"`
@@ -110,7 +114,6 @@ func readArguments() (arguments, error) {
 	return args, nil
 }
 
-// nolint: funlen
 func runScraper(ctx context.Context, args arguments, logger *log.Logger) error {
 	if len(args.URLs) == 0 {
 		return nil
@@ -130,6 +133,11 @@ func runScraper(ctx context.Context, args arguments, logger *log.Logger) error {
 		imageQuality = 0
 	}
 
+	cookies, err := readCookieFile(args.CookieFile)
+	if err != nil {
+		return fmt.Errorf("reading cookie: %w", err)
+	}
+
 	cfg := scraper.Config{
 		Includes: args.Include,
 		Excludes: args.Exclude,
@@ -142,10 +150,17 @@ func runScraper(ctx context.Context, args arguments, logger *log.Logger) error {
 		Username:        username,
 		Password:        password,
 
+		Cookies:   cookies,
 		Header:    scraper.Headers(args.Headers),
 		Proxy:     args.Proxy,
 		UserAgent: args.UserAgent,
 	}
+
+	return scrapeURLs(ctx, cfg, logger, args)
+}
+
+func scrapeURLs(ctx context.Context, cfg scraper.Config,
+	logger *log.Logger, args arguments) error {
 
 	for _, url := range args.URLs {
 		cfg.URL = url
@@ -161,6 +176,12 @@ func runScraper(ctx context.Context, args arguments, logger *log.Logger) error {
 			}
 
 			return fmt.Errorf("scraping '%s': %w", sc.URL, err)
+		}
+
+		if args.SaveCookieFile != "" {
+			if err := saveCookies(args.SaveCookieFile, sc.Cookies()); err != nil {
+				return fmt.Errorf("saving cookies: %w", err)
+			}
 		}
 	}
 
@@ -187,4 +208,38 @@ func createLogger() (*log.Logger, error) {
 		return nil, fmt.Errorf("initializing logger: %w", err)
 	}
 	return logger, nil
+}
+
+func readCookieFile(cookieFile string) ([]scraper.Cookie, error) {
+	if cookieFile == "" {
+		return nil, nil
+	}
+	b, err := os.ReadFile(cookieFile)
+	if err != nil {
+		return nil, fmt.Errorf("reading cookie file: %w", err)
+	}
+
+	var cookies []scraper.Cookie
+	if err := json.Unmarshal(b, &cookies); err != nil {
+		return nil, fmt.Errorf("unmarshaling cookies: %w", err)
+	}
+
+	return cookies, nil
+}
+
+func saveCookies(cookieFile string, cookies []scraper.Cookie) error {
+	if cookieFile == "" || len(cookies) == 0 {
+		return nil
+	}
+
+	b, err := json.Marshal(cookies)
+	if err != nil {
+		return fmt.Errorf("marshaling cookies: %w", err)
+	}
+
+	if err := os.WriteFile(cookieFile, b, 0644); err != nil {
+		return fmt.Errorf("saving cookies: %w", err)
+	}
+
+	return nil
 }

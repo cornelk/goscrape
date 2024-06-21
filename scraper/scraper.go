@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"regexp"
@@ -35,6 +36,7 @@ type Config struct {
 	Username        string
 	Password        string
 
+	Cookies   []Cookie
 	Header    http.Header
 	Proxy     string
 	UserAgent string
@@ -42,9 +44,10 @@ type Config struct {
 
 // Scraper contains all scraping data.
 type Scraper struct {
-	config Config
-	logger *log.Logger
-	URL    *url.URL // contains the main URL to parse, will be modified in case of a redirect
+	config  Config
+	cookies *cookiejar.Jar
+	logger  *log.Logger
+	URL     *url.URL // contains the main URL to parse, will be modified in case of a redirect
 
 	auth   string
 	client *http.Client
@@ -93,7 +96,13 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 		u.Scheme = "http" // if no URL scheme was given default to http
 	}
 
+	cookies, err := createCookieJar(u, cfg.Cookies)
+	if err != nil {
+		return nil, err
+	}
+
 	client := &http.Client{
+		Jar:     cookies,
 		Timeout: time.Duration(cfg.Timeout) * time.Second,
 	}
 
@@ -114,9 +123,10 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 	}
 
 	s := &Scraper{
-		config: cfg,
-		logger: logger,
-		URL:    u,
+		config:  cfg,
+		cookies: cookies,
+		logger:  logger,
+		URL:     u,
 
 		client: client,
 
@@ -161,6 +171,25 @@ func (s *Scraper) Start(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// Cookies returns the current cookies.
+func (s *Scraper) Cookies() []Cookie {
+	httpCookies := s.cookies.Cookies(s.URL)
+	cookies := make([]Cookie, 0, len(httpCookies))
+
+	for _, c := range httpCookies {
+		cookie := Cookie{
+			Name:  c.Name,
+			Value: c.Value,
+		}
+		if !c.Expires.IsZero() {
+			cookie.Expires = &c.Expires
+		}
+		cookies = append(cookies, cookie)
+	}
+
+	return cookies
 }
 
 func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth uint) error {
