@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 Added:
 
 * add cookie loading and storing support
+* add docker image build
 * add header parameter support
 * add user agent parameter support
 * support serving directory in local webserver
