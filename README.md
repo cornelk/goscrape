@@ -94,3 +94,12 @@ Options:
   --help, -h             display this help and exit
   --version              display version and exit
 ```
+
+## Cookies
+
+Cookies can be passed in a file using the `--cookiefile` parameter and a file containing
+cookies in the following format:
+
+```
+[{"name":"user","value":"123"},{"name":"sessioe","value":"sid"}]
+```
