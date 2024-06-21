@@ -57,7 +57,7 @@ goscrape --serve website.com`
 ```
 Scrape a website and create an offline browsable version on the disk.
 
-Usage: goscrape [--include INCLUDE] [--exclude EXCLUDE] [--output OUTPUT] [--depth DEPTH] [--imagequality IMAGEQUALITY] [--timeout TIMEOUT] [--serve SERVE] [--serverport SERVERPORT] [--header HEADER] [--proxy PROXY] [--user USER] [--useragent USERAGENT] [--verbose] [URLS [URLS ...]]
+Usage: goscrape [--include INCLUDE] [--exclude EXCLUDE] [--output OUTPUT] [--depth DEPTH] [--imagequality IMAGEQUALITY] [--timeout TIMEOUT] [--serve SERVE] [--serverport SERVERPORT] [--cookiefile COOKIEFILE] [--savecookiefile SAVECOOKIEFILE] [--header HEADER] [--proxy PROXY] [--user USER] [--useragent USERAGENT] [--verbose] [URLS [URLS ...]]
 
 Positional arguments:
   URLS
@@ -79,14 +79,27 @@ Options:
                          serve the website using a webserver
   --serverport SERVERPORT, -r SERVERPORT
                          port to use for the webserver [default: 8080]
+  --cookiefile COOKIEFILE, -c COOKIEFILE
+                         file containing the cookie content
+  --savecookiefile SAVECOOKIEFILE
+                         file to save the cookie content
   --header HEADER, -h HEADER
                          HTTP header to use for scraping
   --proxy PROXY, -p PROXY
                          HTTP proxy to use for scraping
-  --user USER, -u USER   user[:password] to use for authentication
+  --user USER, -u USER   user[:password] to use for HTTP authentication
   --useragent USERAGENT, -a USERAGENT
                          user agent to use for scraping
   --verbose, -v          verbose output
   --help, -h             display this help and exit
   --version              display version and exit
+```
+
+## Cookies
+
+Cookies can be passed in a file using the `--cookiefile` parameter and a file containing
+cookies in the following format:
+
+```
+[{"name":"user","value":"123"},{"name":"sessioe","value":"sid"}]
 ```
