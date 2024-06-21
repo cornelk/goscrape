@@ -44,12 +44,12 @@ Compiling the tool from source code needs to have a recent version of [Golang](h
 
 Scrape a website by running
 ```
-goscrape http://website.com`
+goscrape http://website.com
 ```
 
 To serve the downloaded website directory in a local run webserver use
 ```
-goscrape --serve website.com`
+goscrape --serve website.com
 ```
 
 ## Options
