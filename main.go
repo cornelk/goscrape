@@ -31,6 +31,9 @@ type arguments struct {
 	ImageQuality int64 `arg:"-i,--imagequality" help:"image quality, 0 to disable reencoding"`
 	Timeout      int64 `arg:"-t,--timeout" help:"time limit in seconds for each HTTP request to connect and read the request body"`
 
+	Serve      string `arg:"-s,--serve" help:"serve the website using a webserver"`
+	ServerPort int16  `arg:"-r,--serverport" help:"port to use for the webserver" default:"8080"`
+
 	Headers   []string `arg:"-h,--header" help:"HTTP header to use for scraping"`
 	Proxy     string   `arg:"-p,--proxy" help:"HTTP proxy to use for scraping"`
 	User      string   `arg:"-u,--user" help:"user[:password] to use for authentication"`
@@ -55,8 +58,26 @@ func main() {
 	}
 
 	ctx := app.Context()
-	if err := run(ctx, args); err != nil {
-		fmt.Printf("Execution error: %s\n", err)
+
+	if args.Verbose {
+		log.SetDefaultLevel(log.DebugLevel)
+	}
+	logger, err := createLogger()
+	if err != nil {
+		fmt.Printf("Creating logger failed: %s\n", err)
+		os.Exit(1)
+	}
+
+	if args.Serve != "" {
+		if err := runServer(ctx, args, logger); err != nil {
+			fmt.Printf("Server execution error: %s\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if err := runScraper(ctx, args, logger); err != nil {
+		fmt.Printf("Scraping execution error: %s\n", err)
 		os.Exit(1)
 	}
 }
@@ -81,7 +102,7 @@ func readArguments() (arguments, error) {
 		return arguments{}, fmt.Errorf("parsing arguments: %w", err)
 	}
 
-	if len(args.URLs) == 0 {
+	if len(args.URLs) == 0 && args.Serve == "" {
 		parser.WriteHelp(os.Stdout)
 		os.Exit(0)
 	}
@@ -90,7 +111,7 @@ func readArguments() (arguments, error) {
 }
 
 // nolint: funlen
-func run(ctx context.Context, args arguments) error {
+func runScraper(ctx context.Context, args arguments, logger *log.Logger) error {
 	if len(args.URLs) == 0 {
 		return nil
 	}
@@ -107,14 +128,6 @@ func run(ctx context.Context, args arguments) error {
 	imageQuality := args.ImageQuality
 	if args.ImageQuality < 0 || args.ImageQuality >= 100 {
 		imageQuality = 0
-	}
-
-	if args.Verbose {
-		log.SetDefaultLevel(log.DebugLevel)
-	}
-	logger, err := createLogger()
-	if err != nil {
-		return fmt.Errorf("creating logger: %w", err)
 	}
 
 	cfg := scraper.Config{
@@ -151,6 +164,13 @@ func run(ctx context.Context, args arguments) error {
 		}
 	}
 
+	return nil
+}
+
+func runServer(ctx context.Context, args arguments, logger *log.Logger) error {
+	if err := scraper.ServeDirectory(ctx, args.Serve, args.ServerPort, logger); err != nil {
+		return fmt.Errorf("serving directory: %w", err)
+	}
 	return nil
 }
 
