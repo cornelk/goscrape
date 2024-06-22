@@ -45,7 +45,7 @@ func (s *Scraper) fixHTMLNodeURLs(baseURL *url.URL, relativeToRoot string, index
 	urls := index.Nodes("a")
 	for _, nodes := range urls {
 		for _, node := range nodes {
-			if s.fixNodeURL(baseURL, "href", node, true, relativeToRoot) {
+			if s.fixNodeURL(baseURL, htmlindex.HrefAttribute, node, true, relativeToRoot) {
 				changed = true
 			}
 		}
@@ -54,7 +54,7 @@ func (s *Scraper) fixHTMLNodeURLs(baseURL *url.URL, relativeToRoot string, index
 	urls = index.Nodes("link")
 	for _, nodes := range urls {
 		for _, node := range nodes {
-			if s.fixNodeURL(baseURL, "href", node, false, relativeToRoot) {
+			if s.fixNodeURL(baseURL, htmlindex.HrefAttribute, node, false, relativeToRoot) {
 				changed = true
 			}
 		}
@@ -63,7 +63,7 @@ func (s *Scraper) fixHTMLNodeURLs(baseURL *url.URL, relativeToRoot string, index
 	urls = index.Nodes("img")
 	for _, nodes := range urls {
 		for _, node := range nodes {
-			if s.fixNodeURL(baseURL, "src", node, false, relativeToRoot) {
+			if s.fixNodeURL(baseURL, htmlindex.SrcAttribute, node, false, relativeToRoot) {
 				changed = true
 			}
 		}
@@ -72,7 +72,7 @@ func (s *Scraper) fixHTMLNodeURLs(baseURL *url.URL, relativeToRoot string, index
 	urls = index.Nodes("script")
 	for _, nodes := range urls {
 		for _, node := range nodes {
-			if s.fixNodeURL(baseURL, "src", node, false, relativeToRoot) {
+			if s.fixNodeURL(baseURL, htmlindex.SrcAttribute, node, false, relativeToRoot) {
 				changed = true
 			}
 		}

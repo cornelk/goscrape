@@ -15,6 +15,11 @@ type Index struct {
 	data map[string]map[string][]*html.Node
 }
 
+const (
+	HrefAttribute = "href"
+	SrcAttribute  = "src"
+)
+
 // New returns a new index.
 func New() *Index {
 	return &Index{
@@ -33,10 +38,10 @@ func (h *Index) Index(baseURL *url.URL, node *html.Node) {
 
 		switch child.Data {
 		case "a", "link":
-			reference = nodeURL(baseURL, "href", child)
+			reference = nodeURL(baseURL, HrefAttribute, child)
 
 		case "img", "script":
-			reference = nodeURL(baseURL, "src", child)
+			reference = nodeURL(baseURL, SrcAttribute, child)
 
 		default:
 			if node.FirstChild != nil {
