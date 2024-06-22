@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"net/url"
+	"os"
 	"testing"
 
 	"github.com/cornelk/gotokit/log"
@@ -14,13 +15,15 @@ func TestGetFilePath(t *testing.T) {
 		ExpectedFilePath string
 	}
 
+	pathSeparator := string(os.PathSeparator)
+	expectedBasePath := "google.com" + pathSeparator
 	var fixtures = []filePathFixture{
-		{"https://google.com/", "https://github.com/", "google.com/_github.com/index.html"},
-		{"https://google.com/", "https://github.com/#anchor", "google.com/_github.com/index.html"},
-		{"https://google.com/", "https://github.com/test", "google.com/_github.com/test.html"},
-		{"https://google.com/", "https://github.com/test/", "google.com/_github.com/test/index.html"},
-		{"https://google.com/", "https://github.com/test.aspx", "google.com/_github.com/test.aspx"},
-		{"https://google.com/", "https://google.com/settings", "google.com/settings.html"},
+		{"https://google.com/", "https://github.com/", expectedBasePath + "_github.com" + pathSeparator + "index.html"},
+		{"https://google.com/", "https://github.com/#anchor", expectedBasePath + "_github.com" + pathSeparator + "index.html"},
+		{"https://google.com/", "https://github.com/test", expectedBasePath + "_github.com" + pathSeparator + "test.html"},
+		{"https://google.com/", "https://github.com/test/", expectedBasePath + "_github.com" + pathSeparator + "test" + pathSeparator + "index.html"},
+		{"https://google.com/", "https://github.com/test.aspx", expectedBasePath + "_github.com" + pathSeparator + "test.aspx"},
+		{"https://google.com/", "https://google.com/settings", expectedBasePath + "settings.html"},
 	}
 
 	var cfg Config
