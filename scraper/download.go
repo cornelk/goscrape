@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 
 	"github.com/cornelk/goscrape/htmlindex"
 	"github.com/cornelk/gotokit/log"
@@ -61,8 +60,8 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 	}
 
 	filePath := s.getFilePath(u, false)
-	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-		return nil // exists already on disk
+	if s.fileExists(filePath) {
+		return nil
 	}
 
 	s.logger.Info("Downloading asset", log.String("url", urlFull))
@@ -80,7 +79,7 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 		buf = processor(u, buf)
 	}
 
-	if err = s.writeFile(filePath, buf); err != nil {
+	if err = s.fileWriter(filePath, buf); err != nil {
 		s.logger.Error("Writing asset file failed",
 			log.String("url", urlFull),
 			log.String("file", filePath),

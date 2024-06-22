@@ -17,6 +17,25 @@ type Cookie struct {
 	Expires *time.Time `json:"expires,omitempty"`
 }
 
+// Cookies returns the current cookies.
+func (s *Scraper) Cookies() []Cookie {
+	httpCookies := s.cookies.Cookies(s.URL)
+	cookies := make([]Cookie, 0, len(httpCookies))
+
+	for _, c := range httpCookies {
+		cookie := Cookie{
+			Name:  c.Name,
+			Value: c.Value,
+		}
+		if !c.Expires.IsZero() {
+			cookie.Expires = &c.Expires
+		}
+		cookies = append(cookies, cookie)
+	}
+
+	return cookies
+}
+
 func createCookieJar(u *url.URL, cookies []Cookie) (*cookiejar.Jar, error) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {

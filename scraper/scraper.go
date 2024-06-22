@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
 	"regexp"
 	"time"
 
@@ -61,6 +60,10 @@ type Scraper struct {
 	imagesQueue       []*url.URL
 	webPageQueue      []*url.URL
 	webPageQueueDepth map[string]uint
+
+	dirCreator         dirCreator
+	fileExistenceCheck fileExistenceCheck
+	fileWriter         fileWriter
 }
 
 // New creates a new Scraper instance.
@@ -138,6 +141,10 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 		webPageQueueDepth: map[string]uint{},
 	}
 
+	s.dirCreator = s.createDownloadPath
+	s.fileExistenceCheck = s.fileExists
+	s.fileWriter = s.writeFile
+
 	if s.config.Username != "" {
 		s.auth = "Basic " + base64.StdEncoding.EncodeToString([]byte(s.config.Username+":"+s.config.Password))
 	}
@@ -147,10 +154,8 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 
 // Start starts the scraping.
 func (s *Scraper) Start(ctx context.Context) error {
-	if s.config.OutputDirectory != "" {
-		if err := os.MkdirAll(s.config.OutputDirectory, os.ModePerm); err != nil {
-			return fmt.Errorf("creating directory '%s': %w", s.config.OutputDirectory, err)
-		}
+	if err := s.dirCreator(s.config.OutputDirectory); err != nil {
+		return err
 	}
 
 	if !s.shouldURLBeDownloaded(s.URL, 0, false) {
@@ -171,25 +176,6 @@ func (s *Scraper) Start(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// Cookies returns the current cookies.
-func (s *Scraper) Cookies() []Cookie {
-	httpCookies := s.cookies.Cookies(s.URL)
-	cookies := make([]Cookie, 0, len(httpCookies))
-
-	for _, c := range httpCookies {
-		cookie := Cookie{
-			Name:  c.Name,
-			Value: c.Value,
-		}
-		if !c.Expires.IsZero() {
-			cookie.Expires = &c.Expires
-		}
-		cookies = append(cookies, cookie)
-	}
-
-	return cookies
 }
 
 func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth uint) error {
@@ -316,7 +302,7 @@ func (s *Scraper) storeDownload(u *url.URL, buf *bytes.Buffer, doc *html.Node,
 
 	filePath := s.getFilePath(u, isAPage)
 	// always update html files, content might have changed
-	if err := s.writeFile(filePath, buf); err != nil {
+	if err := s.fileWriter(filePath, buf); err != nil {
 		s.logger.Error("Writing to file failed",
 			log.String("URL", u.String()),
 			log.String("file", filePath),
