@@ -9,12 +9,6 @@ import (
 	"github.com/cornelk/gotokit/log"
 )
 
-type (
-	dirCreator         func(path string) error
-	fileExistenceCheck func(filePath string) bool
-	fileWriter         func(filePath string, buf *bytes.Buffer) error
-)
-
 // createDownloadPath creates the download path if it does not exist yet.
 func (s *Scraper) createDownloadPath(path string) error {
 	if path == "" {

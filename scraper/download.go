@@ -65,9 +65,7 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 	}
 
 	s.logger.Info("Downloading asset", log.String("url", urlFull))
-
-	buf := &bytes.Buffer{}
-	_, err := s.sendHTTPRequest(ctx, u, buf)
+	buf, _, err := s.downloadURL(ctx, u)
 	if err != nil {
 		s.logger.Error("Downloading asset failed",
 			log.String("url", urlFull),

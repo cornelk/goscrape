@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -41,6 +40,13 @@ type Config struct {
 	UserAgent string
 }
 
+type (
+	httpDownloader     func(ctx context.Context, u *url.URL) (*bytes.Buffer, *url.URL, error)
+	dirCreator         func(path string) error
+	fileExistenceCheck func(filePath string) bool
+	fileWriter         func(filePath string, buf *bytes.Buffer) error
+)
+
 // Scraper contains all scraping data.
 type Scraper struct {
 	config  Config
@@ -64,6 +70,7 @@ type Scraper struct {
 	dirCreator         dirCreator
 	fileExistenceCheck fileExistenceCheck
 	fileWriter         fileWriter
+	httpDownloader     httpDownloader
 }
 
 // New creates a new Scraper instance.
@@ -144,6 +151,7 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 	s.dirCreator = s.createDownloadPath
 	s.fileExistenceCheck = s.fileExists
 	s.fileWriter = s.writeFile
+	s.httpDownloader = s.downloadURL
 
 	if s.config.Username != "" {
 		s.auth = "Basic " + base64.StdEncoding.EncodeToString([]byte(s.config.Username+":"+s.config.Password))
@@ -162,7 +170,7 @@ func (s *Scraper) Start(ctx context.Context) error {
 		return errors.New("start page is excluded from downloading")
 	}
 
-	if err := s.downloadWebpage(ctx, s.URL, 0); err != nil {
+	if err := s.processURL(ctx, s.URL, 0); err != nil {
 		return err
 	}
 
@@ -170,7 +178,7 @@ func (s *Scraper) Start(ctx context.Context) error {
 		ur := s.webPageQueue[0]
 		s.webPageQueue = s.webPageQueue[1:]
 		currentDepth := s.webPageQueueDepth[ur.String()]
-		if err := s.downloadWebpage(ctx, ur, currentDepth+1); err != nil && errors.Is(err, context.Canceled) {
+		if err := s.processURL(ctx, ur, currentDepth+1); err != nil && errors.Is(err, context.Canceled) {
 			return err
 		}
 	}
@@ -178,12 +186,9 @@ func (s *Scraper) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth uint) error {
-	buf := &bytes.Buffer{}
-
+func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint) error {
 	s.logger.Info("Downloading webpage", log.String("url", u.String()))
-
-	respURL, err := s.sendHTTPRequest(ctx, u, buf)
+	buf, respURL, err := s.downloadURL(ctx, u)
 	if err != nil {
 		s.logger.Error("Processing HTTP Request failed",
 			log.String("url", u.String()),
@@ -237,46 +242,6 @@ func (s *Scraper) downloadWebpage(ctx context.Context, u *url.URL, currentDepth 
 	}
 
 	return nil
-}
-
-func (s *Scraper) sendHTTPRequest(ctx context.Context, u *url.URL, buf *bytes.Buffer) (*url.URL, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("creating HTTP request: %w", err)
-	}
-
-	req.Header.Set("User-Agent", s.config.UserAgent)
-	if s.auth != "" {
-		req.Header.Set("Authorization", s.auth)
-	}
-
-	for key, values := range s.config.Header {
-		for _, value := range values {
-			req.Header.Set(key, value)
-		}
-	}
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("sending HTTP request: %w", err)
-	}
-
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			s.logger.Error("Closing HTTP Request body failed",
-				log.String("url", u.String()),
-				log.Err(err))
-		}
-	}()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected HTTP request status code %d", resp.StatusCode)
-	}
-
-	if _, err := io.Copy(buf, resp.Body); err != nil {
-		return nil, fmt.Errorf("reading HTTP request body: %w", err)
-	}
-	return resp.Request.URL, nil
 }
 
 // storeDownload writes the download to a file, if a known binary file is detected,
