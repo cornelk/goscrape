@@ -188,7 +188,7 @@ func (s *Scraper) Start(ctx context.Context) error {
 
 func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint) error {
 	s.logger.Info("Downloading webpage", log.String("url", u.String()))
-	buf, respURL, err := s.downloadURL(ctx, u)
+	buf, respURL, err := s.httpDownloader(ctx, u)
 	if err != nil {
 		s.logger.Error("Processing HTTP Request failed",
 			log.String("url", u.String()),
