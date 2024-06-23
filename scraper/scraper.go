@@ -82,6 +82,7 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 	if err != nil {
 		errs = append(errs, err)
 	}
+	u.Fragment = ""
 
 	includes, err := compileRegexps(cfg.Includes)
 	if err != nil {
@@ -235,6 +236,8 @@ func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint)
 	}
 
 	for _, ur := range references {
+		ur.Fragment = ""
+
 		if s.shouldURLBeDownloaded(ur, currentDepth, false) {
 			s.webPageQueue = append(s.webPageQueue, ur)
 			s.webPageQueueDepth[ur.String()] = currentDepth

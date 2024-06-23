@@ -53,6 +53,7 @@ func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index
 
 // downloadAsset downloads an asset if it does not exist on disk yet.
 func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor assetProcessor) error {
+	u.Fragment = ""
 	urlFull := u.String()
 
 	if !s.shouldURLBeDownloaded(u, 0, true) {

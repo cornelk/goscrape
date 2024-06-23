@@ -47,6 +47,9 @@ func newTestScraper(t *testing.T, startURL string, urls map[string][]byte) *Scra
 func TestScraper(t *testing.T) {
 	indexPage := []byte(`
 <html>
+<head>
+<link href=' https://example.org/style.css#fragment' rel='stylesheet' type='text/css'>
+</head>
 <body>
 <a href="https://example.org/page2">Example</a>
 </body>
@@ -55,13 +58,23 @@ func TestScraper(t *testing.T) {
 
 	page2 := []byte(`
 <html>
+<body>
+<!--link to index with fragment-->
+<a href="/#fragment">a</a>
+<!--link to page with fragment-->
+<a href="/sub/#fragment">a</a>
+</body>
 </html>
 `)
 
-	startURL := "https://example.org/"
+	css := []byte(``)
+
+	startURL := "https://example.org/#fragment" // start page with fragment
 	urls := map[string][]byte{
-		startURL:                    indexPage,
-		"https://example.org/page2": page2,
+		"https://example.org/":          indexPage,
+		"https://example.org/page2":     page2,
+		"https://example.org/sub/":      indexPage,
+		"https://example.org/style.css": css,
 	}
 
 	scraper := newTestScraper(t, startURL, urls)
@@ -72,4 +85,5 @@ func TestScraper(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, scraper.processed, "/")
 	assert.Contains(t, scraper.processed, "/page2")
+	assert.Contains(t, scraper.processed, "/sub/")
 }
