@@ -13,8 +13,8 @@ import (
 
 // ignoredURLPrefixes contains a list of URL prefixes that do not need to bo adjusted.
 var ignoredURLPrefixes = []string{
-	"#",       // anchor
-	"/#",      // anchor
+	"#",       // fragment
+	"/#",      // fragment
 	"data:",   // embedded data
 	"mailto:", // mail address
 }

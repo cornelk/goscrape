@@ -19,7 +19,7 @@ func TestGetFilePath(t *testing.T) {
 	expectedBasePath := "google.com" + pathSeparator
 	var fixtures = []filePathFixture{
 		{"https://google.com/", "https://github.com/", expectedBasePath + "_github.com" + pathSeparator + "index.html"},
-		{"https://google.com/", "https://github.com/#anchor", expectedBasePath + "_github.com" + pathSeparator + "index.html"},
+		{"https://google.com/", "https://github.com/#fragment", expectedBasePath + "_github.com" + pathSeparator + "index.html"},
 		{"https://google.com/", "https://github.com/test", expectedBasePath + "_github.com" + pathSeparator + "test.html"},
 		{"https://google.com/", "https://github.com/test/", expectedBasePath + "_github.com" + pathSeparator + "test" + pathSeparator + "index.html"},
 		{"https://google.com/", "https://github.com/test.aspx", expectedBasePath + "_github.com" + pathSeparator + "test.aspx"},

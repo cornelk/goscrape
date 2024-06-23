@@ -7,19 +7,6 @@ import (
 	"strings"
 )
 
-// removeAnchor removes anchors from URLS.
-func removeAnchor(path string) string {
-	sl := strings.LastIndexByte(path, '/')
-	if sl == -1 {
-		return path
-	}
-	an := strings.LastIndexByte(path[sl+1:], '#')
-	if an == -1 {
-		return path
-	}
-	return path[:sl+an+1]
-}
-
 func resolveURL(base *url.URL, reference, mainPageHost string, isHyperlink bool, relativeToRoot string) string {
 	ur, err := url.Parse(reference)
 	if err != nil {
@@ -68,7 +55,7 @@ func resolveURL(base *url.URL, reference, mainPageHost string, isHyperlink bool,
 		} else {
 			l := strings.LastIndexByte(resolved, '/')
 			if l != -1 && l < len(resolved) && resolved[l+1] == '#' {
-				resolved = resolved[:l+1] + PageDirIndex + resolved[l+1:] // link anchor correct
+				resolved = resolved[:l+1] + PageDirIndex + resolved[l+1:] // link fragment correct
 			}
 		}
 	}
