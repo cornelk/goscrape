@@ -44,7 +44,7 @@ func newTestScraper(t *testing.T, startURL string, urls map[string][]byte) *Scra
 	return scraper
 }
 
-func TestScraper(t *testing.T) {
+func TestScraperLinks(t *testing.T) {
 	indexPage := []byte(`
 <html>
 <head>
@@ -59,10 +59,12 @@ func TestScraper(t *testing.T) {
 	page2 := []byte(`
 <html>
 <body>
+
 <!--link to index with fragment-->
 <a href="/#fragment">a</a>
 <!--link to page with fragment-->
 <a href="/sub/#fragment">a</a>
+
 </body>
 </html>
 `)
@@ -83,7 +85,48 @@ func TestScraper(t *testing.T) {
 	ctx := context.Background()
 	err := scraper.Start(ctx)
 	require.NoError(t, err)
-	assert.Contains(t, scraper.processed, "/")
-	assert.Contains(t, scraper.processed, "/page2")
-	assert.Contains(t, scraper.processed, "/sub/")
+
+	expectedProcessed := map[string]struct{}{
+		"/":          {},
+		"/page2":     {},
+		"/sub/":      {},
+		"/style.css": {},
+	}
+	assert.Equal(t, expectedProcessed, scraper.processed)
+}
+
+func TestScraperAttributes(t *testing.T) {
+	indexPage := []byte(`
+<html>
+<head>
+</head>
+
+<body background="bg.gif">
+
+<!--embedded image-->
+<img src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs%3D=' />
+
+</body>
+</html>
+`)
+	empty := []byte(``)
+
+	startURL := "https://example.org/"
+	urls := map[string][]byte{
+		"https://example.org/":       indexPage,
+		"https://example.org/bg.gif": empty,
+	}
+
+	scraper := newTestScraper(t, startURL, urls)
+	require.NotNil(t, scraper)
+
+	ctx := context.Background()
+	err := scraper.Start(ctx)
+	require.NoError(t, err)
+
+	expectedProcessed := map[string]struct{}{
+		"/":       {},
+		"/bg.gif": {},
+	}
+	assert.Equal(t, expectedProcessed, scraper.processed)
 }

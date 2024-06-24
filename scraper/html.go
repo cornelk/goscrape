@@ -37,43 +37,28 @@ func (s *Scraper) fixURLReferences(url *url.URL, doc *html.Node,
 	return rendered.String(), true, nil
 }
 
+var nodeAttributes = map[string]string{
+	"a":      htmlindex.HrefAttribute,
+	"img":    htmlindex.SrcAttribute,
+	"link":   htmlindex.HrefAttribute,
+	"script": htmlindex.SrcAttribute,
+	"body":   htmlindex.BackgroundAttribute,
+}
+
 // fixHTMLNodeURLs processes all HTML nodes that contain URLs that need to be fixed
 // to link to downloaded files. It returns whether any URLS have been fixed.
 func (s *Scraper) fixHTMLNodeURLs(baseURL *url.URL, relativeToRoot string, index *htmlindex.Index) bool {
-	changed := false
+	var changed bool
 
-	urls := index.Nodes("a")
-	for _, nodes := range urls {
-		for _, node := range nodes {
-			if s.fixNodeURL(baseURL, htmlindex.HrefAttribute, node, true, relativeToRoot) {
-				changed = true
-			}
-		}
-	}
+	for tag, attribute := range nodeAttributes {
+		isHyperlink := tag == "a"
 
-	urls = index.Nodes("link")
-	for _, nodes := range urls {
-		for _, node := range nodes {
-			if s.fixNodeURL(baseURL, htmlindex.HrefAttribute, node, false, relativeToRoot) {
-				changed = true
-			}
-		}
-	}
-
-	urls = index.Nodes("img")
-	for _, nodes := range urls {
-		for _, node := range nodes {
-			if s.fixNodeURL(baseURL, htmlindex.SrcAttribute, node, false, relativeToRoot) {
-				changed = true
-			}
-		}
-	}
-
-	urls = index.Nodes("script")
-	for _, nodes := range urls {
-		for _, node := range nodes {
-			if s.fixNodeURL(baseURL, htmlindex.SrcAttribute, node, false, relativeToRoot) {
-				changed = true
+		urls := index.Nodes(tag)
+		for _, nodes := range urls {
+			for _, node := range nodes {
+				if s.fixNodeURL(baseURL, attribute, node, isHyperlink, relativeToRoot) {
+					changed = true
+				}
 			}
 		}
 	}
@@ -81,7 +66,7 @@ func (s *Scraper) fixHTMLNodeURLs(baseURL *url.URL, relativeToRoot string, index
 	return changed
 }
 
-// fixURLReferences fixes the URL references of a HTML node to point to a relative file name.
+// fixNodeURL fixes the URL references of a HTML node to point to a relative file name.
 // It returns whether the URL bas been adjusted.
 func (s *Scraper) fixNodeURL(baseURL *url.URL, attributeName string, node *html.Node,
 	isHyperlink bool, relativeToRoot string) bool {
