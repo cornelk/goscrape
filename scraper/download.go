@@ -15,6 +15,12 @@ import (
 // a downloaded file content before it will be stored on disk.
 type assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 
+var tagsWithReferences = []string{
+	"link",
+	"script",
+	"body",
+}
+
 func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index) error {
 	references, err := index.URLs("img")
 	if err != nil {
@@ -22,23 +28,22 @@ func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index
 	}
 	s.imagesQueue = append(s.imagesQueue, references...)
 
-	references, err = index.URLs("link")
-	if err != nil {
-		s.logger.Error("Getting link nodes URLs failed", log.Err(err))
-	}
-	for _, ur := range references {
-		if err := s.downloadAsset(ctx, ur, s.checkCSSForUrls); err != nil && errors.Is(err, context.Canceled) {
-			return err
+	for _, tag := range tagsWithReferences {
+		references, err = index.URLs(tag)
+		if err != nil {
+			s.logger.Error("Getting node URLs failed",
+				log.String("node", tag),
+				log.Err(err))
 		}
-	}
 
-	references, err = index.URLs("script")
-	if err != nil {
-		s.logger.Error("Getting script nodes URLs failed", log.Err(err))
-	}
-	for _, ur := range references {
-		if err := s.downloadAsset(ctx, ur, nil); err != nil && errors.Is(err, context.Canceled) {
-			return err
+		var processor assetProcessor
+		if tag == "link" {
+			processor = s.checkCSSForUrls
+		}
+		for _, ur := range references {
+			if err := s.downloadAsset(ctx, ur, processor); err != nil && errors.Is(err, context.Canceled) {
+				return err
+			}
 		}
 	}
 

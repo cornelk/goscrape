@@ -16,8 +16,9 @@ type Index struct {
 }
 
 const (
-	HrefAttribute = "href"
-	SrcAttribute  = "src"
+	BackgroundAttribute = "background"
+	HrefAttribute       = "href"
+	SrcAttribute        = "src"
 )
 
 // New returns a new index.
@@ -44,10 +45,14 @@ func (h *Index) Index(baseURL *url.URL, node *html.Node) {
 			reference = nodeURL(baseURL, SrcAttribute, child)
 
 		default:
+			// handle body references and all childs
+			if child.Data == "body" {
+				reference = nodeURL(baseURL, BackgroundAttribute, child)
+			}
+
 			if node.FirstChild != nil {
 				h.Index(baseURL, child)
 			}
-			continue
 		}
 
 		if reference == "" {
