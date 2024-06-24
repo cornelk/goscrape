@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/cornelk/gotokit/log"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCheckCSSForURLs(t *testing.T) {
@@ -14,9 +16,7 @@ func TestCheckCSSForURLs(t *testing.T) {
 		URL: "http://localhost",
 	}
 	s, err := New(logger, cfg)
-	if err != nil {
-		t.Errorf("Scraper New failed: %v", err)
-	}
+	require.NoError(t, err)
 
 	var fixtures = map[string]string{
 		"url('http://localhost/uri/between/single/quote')": "http://localhost/uri/between/single/quote",
@@ -36,19 +36,13 @@ func TestCheckCSSForURLs(t *testing.T) {
 		s.checkCSSForUrls(u, buf)
 
 		if expected == "" {
-			if len(s.imagesQueue) != 0 {
-				t.Errorf("CSS %s should not result in an image in queue with URL %s", input, s.imagesQueue[0].String())
-			}
+			assert.Empty(t, s.imagesQueue)
 			continue
 		}
 
-		if len(s.imagesQueue) == 0 {
-			t.Errorf("CSS %s did not result in an image in queue", input)
-		}
+		assert.Positive(t, len(s.imagesQueue))
 
 		res := s.imagesQueue[0].String()
-		if res != expected {
-			t.Errorf("URL %s should have been %s but was %s", input, expected, res)
-		}
+		assert.Equal(t, expected, res)
 	}
 }

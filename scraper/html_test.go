@@ -35,10 +35,10 @@ func TestFixFileReferences(t *testing.T) {
 	index := htmlindex.New()
 	index.Index(s.URL, doc)
 
-	html, fixed, err := s.fixURLReferences(s.URL, doc, index)
+	ref, fixed, err := s.fixURLReferences(s.URL, doc, index)
 	require.NoError(t, err)
 	assert.True(t, fixed)
 
 	expected := "<html lang=\"es\"><head></head><body><a href=\"wp-content/uploads/document.pdf\" rel=\"doc\">Guide</a>\n\n</body></html>"
-	assert.Equal(t, expected, html)
+	assert.Equal(t, expected, ref)
 }

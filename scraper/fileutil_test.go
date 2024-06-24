@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/cornelk/gotokit/log"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetFilePath(t *testing.T) {
@@ -31,18 +33,12 @@ func TestGetFilePath(t *testing.T) {
 	for _, fix := range fixtures {
 		cfg.URL = fix.BaseURL
 		s, err := New(logger, cfg)
-		if err != nil {
-			t.Errorf("Scraper New failed: %v", err)
-		}
+		require.NoError(t, err)
 
 		URL, err := url.Parse(fix.DownloadURL)
-		if err != nil {
-			t.Errorf("URL parse failed: %v", err)
-		}
+		require.NoError(t, err)
 
 		output := s.getFilePath(URL, true)
-		if output != fix.ExpectedFilePath {
-			t.Errorf("URL %s should have become file %s but was %s", fix.DownloadURL, fix.ExpectedFilePath, output)
-		}
+		assert.Equal(t, fix.ExpectedFilePath, output)
 	}
 }

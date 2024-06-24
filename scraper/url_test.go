@@ -3,6 +3,8 @@ package scraper
 import (
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResolveURL(t *testing.T) {
@@ -36,10 +38,7 @@ func TestResolveURL(t *testing.T) {
 
 	for _, fix := range fixtures {
 		resolved := resolveURL(&fix.BaseURL, fix.Reference, URL.Host, fix.IsHyperlink, fix.RelativeToRoot)
-
-		if resolved != fix.Resolved {
-			t.Errorf("Reference %s should be resolved to %s but was %s", fix.Reference, fix.Resolved, resolved)
-		}
+		assert.Equal(t, fix.Resolved, resolved)
 	}
 }
 
@@ -61,9 +60,7 @@ func Test_urlRelativeToOther(t *testing.T) {
 
 	for _, fix := range fixtures {
 		relativeURL := urlRelativeToOther(&fix.SrcURL, &fix.BaseURL)
-		if relativeURL != fix.ExpectedSrcPath {
-			t.Errorf("URL %s should have become %s but was %s", fix.SrcURL.Path, fix.ExpectedSrcPath, relativeURL)
-		}
+		assert.Equal(t, fix.ExpectedSrcPath, relativeURL)
 	}
 }
 
@@ -82,8 +79,6 @@ func Test_urlRelativeToRoot(t *testing.T) {
 
 	for _, fix := range fixtures {
 		relativeURL := urlRelativeToRoot(&fix.SrcURL)
-		if relativeURL != fix.Expected {
-			t.Errorf("URL %s should have gotten relative root path %s but was %s", fix.SrcURL.Path, fix.Expected, relativeURL)
-		}
+		assert.Equal(t, fix.Expected, relativeURL)
 	}
 }
