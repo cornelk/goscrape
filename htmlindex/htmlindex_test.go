@@ -18,18 +18,7 @@ func TestIndex(t *testing.T) {
 </html>
 `)
 
-	buf := &bytes.Buffer{}
-	_, err := buf.Write(input)
-	require.NoError(t, err)
-
-	doc, err := html.Parse(buf)
-	require.NoError(t, err)
-
-	ur, err := url.Parse("https://domain.com/")
-	require.NoError(t, err)
-
-	idx := New()
-	idx.Index(ur, doc)
+	idx := testSetup(t, input)
 
 	// check a tag
 	nodeTag := "a"
@@ -64,4 +53,38 @@ func TestIndex(t *testing.T) {
 	require.Empty(t, references)
 	urls = idx.Nodes(nodeTag)
 	require.Empty(t, urls)
+}
+
+func TestIndexImg(t *testing.T) {
+	input := []byte(`
+<html lang="es">
+<img srcset="test-480w.jpg 480w, test-800w.jpg 800w"/> 
+</html>
+`)
+
+	idx := testSetup(t, input)
+	references, err := idx.URLs("img")
+	require.NoError(t, err)
+	require.Len(t, references, 2)
+	assert.Equal(t, "https://domain.com/test-480w.jpg", references[0].String())
+	assert.Equal(t, "https://domain.com/test-800w.jpg", references[1].String())
+}
+
+func testSetup(t *testing.T, input []byte) *Index {
+	t.Helper()
+
+	buf := &bytes.Buffer{}
+	_, err := buf.Write(input)
+	require.NoError(t, err)
+
+	doc, err := html.Parse(buf)
+	require.NoError(t, err)
+
+	ur, err := url.Parse("https://domain.com/")
+	require.NoError(t, err)
+
+	idx := New()
+	idx.Index(ur, doc)
+
+	return idx
 }
