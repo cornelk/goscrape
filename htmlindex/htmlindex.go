@@ -15,13 +15,6 @@ type Index struct {
 	data map[string]map[string][]*html.Node
 }
 
-const (
-	BackgroundAttribute = "background"
-	HrefAttribute       = "href"
-	SrcAttribute        = "src"
-	SrcSetAttribute     = "srcset"
-)
-
 // New returns a new index.
 func New() *Index {
 	return &Index{
@@ -38,26 +31,9 @@ func (h *Index) Index(baseURL *url.URL, node *html.Node) {
 
 		var references []string
 
-		switch child.Data {
-		case "a", "link":
-			references = nodeAttributeURLs(baseURL, child, HrefAttribute, nil)
-
-		case "script":
-			references = nodeAttributeURLs(baseURL, child, SrcAttribute, nil)
-
-		case "img":
-			references = nodeAttributeURLs(baseURL, child, SrcAttribute, nil)
-			references = append(references, nodeAttributeURLs(baseURL, child, SrcSetAttribute, srcSetValueSplitter)...)
-
-		default:
-			// handle body references and all childs
-			if child.Data == "body" {
-				references = nodeAttributeURLs(baseURL, child, BackgroundAttribute, nil) // TODO: handle srcset attribute)
-			}
-
-			if node.FirstChild != nil {
-				h.Index(baseURL, child)
-			}
+		info, ok := Nodes[child.Data]
+		if ok {
+			references = nodeAttributeURLs(baseURL, child, info.parser, info.Attributes...)
 		}
 
 		m, ok := h.data[child.Data]
@@ -68,6 +44,10 @@ func (h *Index) Index(baseURL *url.URL, node *html.Node) {
 
 		for _, reference := range references {
 			m[reference] = append(m[reference], child)
+		}
+
+		if node.FirstChild != nil {
+			h.Index(baseURL, child)
 		}
 	}
 }
@@ -106,25 +86,34 @@ func (h *Index) Nodes(tag string) map[string][]*html.Node {
 	return map[string][]*html.Node{}
 }
 
-type nodeAttributeParser func(value string) []string
-
 // nodeAttributeURLs returns resolved URLs based on the base URL and the HTML node attribute values.
 func nodeAttributeURLs(baseURL *url.URL, node *html.Node,
-	attributeName string, parser nodeAttributeParser) []string {
+	parser nodeAttributeParser, attributeName ...string) []string {
+
+	var results []string
 
 	for _, attr := range node.Attr {
-		if attr.Key != attributeName {
+		var process bool
+		for _, name := range attributeName {
+			if attr.Key == name {
+				process = true
+				break
+			}
+		}
+		if !process {
 			continue
 		}
 
 		var references []string
-		if parser == nil {
+		var parserHandled bool
+
+		if parser != nil {
+			references, parserHandled = parser(attr.Key, strings.TrimSpace(attr.Val))
+		}
+		if parser == nil || !parserHandled {
 			references = append(references, strings.TrimSpace(attr.Val))
-		} else {
-			references = parser(strings.TrimSpace(attr.Val))
 		}
 
-		var results []string
 		for _, reference := range references {
 			ur, err := url.Parse(reference)
 			if err != nil {
@@ -134,14 +123,17 @@ func nodeAttributeURLs(baseURL *url.URL, node *html.Node,
 			ur = baseURL.ResolveReference(ur)
 			results = append(results, ur.String())
 		}
-		return results
 	}
 
-	return nil
+	return results
 }
 
 // srcSetValueSplitter returns the URL values of the srcset attribute of img nodes.
-func srcSetValueSplitter(attributeValue string) []string {
+func srcSetValueSplitter(attribute, attributeValue string) ([]string, bool) {
+	if attribute != SrcSetAttribute && attribute != DataSrcSetAttribute {
+		return nil, false
+	}
+
 	// split the set of responsive images
 	values := strings.Split(attributeValue, ",")
 
@@ -151,5 +143,5 @@ func srcSetValueSplitter(attributeValue string) []string {
 		values[i], _, _ = strings.Cut(value, " ")
 	}
 
-	return values
+	return values, true
 }
