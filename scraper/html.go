@@ -38,11 +38,11 @@ func (s *Scraper) fixURLReferences(url *url.URL, doc *html.Node,
 }
 
 var nodeAttributes = map[string]string{
-	"a":      htmlindex.HrefAttribute,
-	"img":    htmlindex.SrcAttribute,
-	"link":   htmlindex.HrefAttribute,
-	"script": htmlindex.SrcAttribute,
-	"body":   htmlindex.BackgroundAttribute,
+	htmlindex.ATag:      htmlindex.HrefAttribute,
+	htmlindex.BodyTag:   htmlindex.BackgroundAttribute,
+	htmlindex.ImgTag:    htmlindex.SrcAttribute,
+	htmlindex.LinkTag:   htmlindex.HrefAttribute,
+	htmlindex.ScriptTag: htmlindex.SrcAttribute,
 }
 
 // fixHTMLNodeURLs processes all HTML nodes that contain URLs that need to be fixed
@@ -51,7 +51,7 @@ func (s *Scraper) fixHTMLNodeURLs(baseURL *url.URL, relativeToRoot string, index
 	var changed bool
 
 	for tag, attribute := range nodeAttributes {
-		isHyperlink := tag == "a"
+		isHyperlink := tag == htmlindex.ATag
 
 		urls := index.Nodes(tag)
 		for _, nodes := range urls {

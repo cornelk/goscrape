@@ -65,14 +65,14 @@ func TestIndexImg(t *testing.T) {
 `)
 
 	idx := testSetup(t, input)
-	references, err := idx.URLs("img")
+	references, err := idx.URLs(ImgTag)
 	require.NoError(t, err)
 	require.Len(t, references, 3)
 	assert.Equal(t, "https://domain.com/test-480w.jpg", references[0].String())
 	assert.Equal(t, "https://domain.com/test-800w.jpg", references[1].String())
 	assert.Equal(t, "https://domain.com/test.jpg", references[2].String())
 
-	references, err = idx.URLs("body")
+	references, err = idx.URLs(BodyTag)
 	require.NoError(t, err)
 	require.Len(t, references, 1)
 	assert.Equal(t, "https://domain.com/bg.jpg", references[0].String())

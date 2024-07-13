@@ -16,15 +16,21 @@ import (
 type assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
 
 var tagsWithReferences = []string{
-	"link",
-	"script",
-	"body",
+	htmlindex.LinkTag,
+	htmlindex.ScriptTag,
+	htmlindex.BodyTag,
 }
 
 func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index) error {
-	references, err := index.URLs("img")
+	references, err := index.URLs(htmlindex.BodyTag)
 	if err != nil {
-		s.logger.Error("Getting img nodes URLs failed", log.Err(err))
+		s.logger.Error("Getting body node URLs failed", log.Err(err))
+	}
+	s.imagesQueue = append(s.imagesQueue, references...)
+
+	references, err = index.URLs("img")
+	if err != nil {
+		s.logger.Error("Getting img node URLs failed", log.Err(err))
 	}
 	s.imagesQueue = append(s.imagesQueue, references...)
 
@@ -37,7 +43,7 @@ func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index
 		}
 
 		var processor assetProcessor
-		if tag == "link" {
+		if tag == htmlindex.LinkTag {
 			processor = s.checkCSSForUrls
 		}
 		for _, ur := range references {

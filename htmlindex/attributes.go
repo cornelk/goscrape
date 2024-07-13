@@ -21,21 +21,29 @@ const (
 	SrcSetAttribute     = "srcset"
 )
 
+const (
+	ATag      = "a"
+	BodyTag   = "body"
+	ImgTag    = "img"
+	LinkTag   = "link"
+	ScriptTag = "script"
+)
+
 var Nodes = map[string]Node{
-	"a": {
+	ATag: {
 		Attributes: []string{HrefAttribute},
 	},
-	"body": {
+	BodyTag: {
 		Attributes: []string{BackgroundAttribute},
 	},
-	"img": {
+	ImgTag: {
 		Attributes: []string{SrcAttribute, DataSrcAttribute, SrcSetAttribute, DataSrcSetAttribute},
 		parser:     srcSetValueSplitter,
 	},
-	"link": {
+	LinkTag: {
 		Attributes: []string{HrefAttribute},
 	},
-	"script": {
+	ScriptTag: {
 		Attributes: []string{SrcAttribute},
 	},
 }

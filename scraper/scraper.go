@@ -230,7 +230,7 @@ func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint)
 	// check first and download afterward to not hit max depth limit for
 	// start page links because of recursive linking
 	// a hrefs
-	references, err := index.URLs("a")
+	references, err := index.URLs(htmlindex.ATag)
 	if err != nil {
 		s.logger.Error("Parsing URL failed", log.Err(err))
 	}
