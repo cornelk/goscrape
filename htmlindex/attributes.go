@@ -29,6 +29,7 @@ const (
 	ScriptTag = "script"
 )
 
+// Nodes describes the HTML tags and their attributes that can contain URL.
 var Nodes = map[string]Node{
 	ATag: {
 		Attributes: []string{HrefAttribute},
@@ -46,4 +47,10 @@ var Nodes = map[string]Node{
 	ScriptTag: {
 		Attributes: []string{SrcAttribute},
 	},
+}
+
+// SrcSetAttributes contains the attributes that contain srcset values.
+var SrcSetAttributes = map[string]struct{}{
+	DataSrcSetAttribute: {},
+	SrcSetAttribute:     {},
 }

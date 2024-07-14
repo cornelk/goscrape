@@ -130,7 +130,7 @@ func nodeAttributeURLs(baseURL *url.URL, node *html.Node,
 
 // srcSetValueSplitter returns the URL values of the srcset attribute of img nodes.
 func srcSetValueSplitter(attribute, attributeValue string) ([]string, bool) {
-	if attribute != SrcSetAttribute && attribute != DataSrcSetAttribute {
+	if _, isSrcSet := SrcSetAttributes[attribute]; !isSrcSet {
 		return nil, false
 	}
 

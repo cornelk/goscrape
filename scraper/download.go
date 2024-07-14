@@ -28,7 +28,7 @@ func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index
 	}
 	s.imagesQueue = append(s.imagesQueue, references...)
 
-	references, err = index.URLs("img")
+	references, err = index.URLs(htmlindex.ImgTag)
 	if err != nil {
 		s.logger.Error("Getting img node URLs failed", log.Err(err))
 	}
