@@ -40,7 +40,7 @@ func TestCheckCSSForURLs(t *testing.T) {
 			continue
 		}
 
-		assert.Positive(t, len(s.imagesQueue))
+		assert.NotEmpty(t, s.imagesQueue)
 
 		res := s.imagesQueue[0].String()
 		assert.Equal(t, expected, res)

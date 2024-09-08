@@ -19,7 +19,6 @@ linters:
     - errcheck # checking for unchecked errors
     - errname # Checks that errors are prefixed with the `Err` and error types are suffixed with the `Error`
     - errorlint # finds code that will cause problems with the error wrapping scheme introduced in Go 1.13
-    - exportloopref # checks for pointers to enclosing loop variables
     - funlen # Tool for detection of long functions
     - gci # controls golang package import order and makes it always deterministic
     - gocheckcompilerdirectives # Checks that go compiler directive comments (//go:) are valid
