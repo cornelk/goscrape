@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCheckCSSForURLs(t *testing.T) {
+func TestCSSProcessor(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	cfg := Config{
 		URL: "http://localhost",
@@ -33,7 +33,7 @@ func TestCheckCSSForURLs(t *testing.T) {
 	for input, expected := range fixtures {
 		s.imagesQueue = nil
 		buf := bytes.NewBufferString(input)
-		s.checkCSSForUrls(u, buf)
+		s.cssProcessor(u, buf)
 
 		if expected == "" {
 			assert.Empty(t, s.imagesQueue)

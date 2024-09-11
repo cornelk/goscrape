@@ -130,3 +130,39 @@ func TestScraperAttributes(t *testing.T) {
 	}
 	assert.Equal(t, expectedProcessed, scraper.processed)
 }
+
+func TestScraperInternalCss(t *testing.T) {
+	indexPage := []byte(`
+<html>
+<head>
+<style>
+h1 {
+  background-image: url('/background.jpg');
+}
+</style>
+</head>
+<body>
+</body>
+</html>
+`)
+	empty := []byte(``)
+
+	startURL := "https://example.org/"
+	urls := map[string][]byte{
+		"https://example.org/":               indexPage,
+		"https://example.org/background.jpg": empty,
+	}
+
+	scraper := newTestScraper(t, startURL, urls)
+	require.NotNil(t, scraper)
+
+	ctx := context.Background()
+	err := scraper.Start(ctx)
+	require.NoError(t, err)
+
+	expectedProcessed := map[string]struct{}{
+		"/":               {},
+		"/background.jpg": {},
+	}
+	assert.Equal(t, expectedProcessed, scraper.processed)
+}
