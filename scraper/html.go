@@ -23,18 +23,18 @@ var ignoredURLPrefixes = []string{
 // It returns a bool that indicates that no reference needed to be fixed,
 // in this case the returned HTML string will be empty.
 func (s *Scraper) fixURLReferences(url *url.URL, doc *html.Node,
-	index *htmlindex.Index) (string, bool, error) {
+	index *htmlindex.Index) ([]byte, bool, error) {
 
 	relativeToRoot := urlRelativeToRoot(url)
 	if !s.fixHTMLNodeURLs(url, relativeToRoot, index) {
-		return "", false, nil
+		return nil, false, nil
 	}
 
 	var rendered bytes.Buffer
 	if err := html.Render(&rendered, doc); err != nil {
-		return "", false, fmt.Errorf("rendering html: %w", err)
+		return nil, false, fmt.Errorf("rendering html: %w", err)
 	}
-	return rendered.String(), true, nil
+	return rendered.Bytes(), true, nil
 }
 
 // fixHTMLNodeURLs processes all HTML nodes that contain URLs that need to be fixed

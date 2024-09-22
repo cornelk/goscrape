@@ -41,10 +41,10 @@ type Config struct {
 }
 
 type (
-	httpDownloader     func(ctx context.Context, u *url.URL) (*bytes.Buffer, *url.URL, error)
+	httpDownloader     func(ctx context.Context, u *url.URL) ([]byte, *url.URL, error)
 	dirCreator         func(path string) error
 	fileExistenceCheck func(filePath string) bool
-	fileWriter         func(filePath string, buf *bytes.Buffer) error
+	fileWriter         func(filePath string, data []byte) error
 )
 
 // Scraper contains all scraping data.
@@ -189,7 +189,7 @@ func (s *Scraper) Start(ctx context.Context) error {
 
 func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint) error {
 	s.logger.Info("Downloading webpage", log.String("url", u.String()))
-	buf, respURL, err := s.httpDownloader(ctx, u)
+	data, respURL, err := s.httpDownloader(ctx, u)
 	if err != nil {
 		s.logger.Error("Processing HTTP Request failed",
 			log.String("url", u.String()),
@@ -198,7 +198,7 @@ func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint)
 	}
 
 	fileExtension := ""
-	kind, err := filetype.Match(buf.Bytes())
+	kind, err := filetype.Match(data)
 	if err == nil && kind != types.Unknown {
 		fileExtension = kind.Extension
 	}
@@ -210,6 +210,7 @@ func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint)
 		s.URL = u
 	}
 
+	buf := bytes.NewBuffer(data)
 	doc, err := html.Parse(buf)
 	if err != nil {
 		s.logger.Error("Parsing HTML failed",
@@ -221,7 +222,7 @@ func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint)
 	index := htmlindex.New()
 	index.Index(u, doc)
 
-	s.storeDownload(u, buf, doc, index, fileExtension)
+	s.storeDownload(u, data, doc, index, fileExtension)
 
 	if err := s.downloadReferences(ctx, index); err != nil {
 		return err
@@ -249,12 +250,12 @@ func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint)
 
 // storeDownload writes the download to a file, if a known binary file is detected,
 // processing of the file as page to look for links is skipped.
-func (s *Scraper) storeDownload(u *url.URL, buf *bytes.Buffer, doc *html.Node,
+func (s *Scraper) storeDownload(u *url.URL, data []byte, doc *html.Node,
 	index *htmlindex.Index, fileExtension string) {
 
 	isAPage := false
 	if fileExtension == "" {
-		content, fixed, err := s.fixURLReferences(u, doc, index)
+		fixed, hasChanges, err := s.fixURLReferences(u, doc, index)
 		if err != nil {
 			s.logger.Error("Fixing file references failed",
 				log.String("url", u.String()),
@@ -262,15 +263,15 @@ func (s *Scraper) storeDownload(u *url.URL, buf *bytes.Buffer, doc *html.Node,
 			return
 		}
 
-		if fixed {
-			buf = bytes.NewBufferString(content)
+		if hasChanges {
+			data = fixed
 		}
 		isAPage = true
 	}
 
 	filePath := s.getFilePath(u, isAPage)
 	// always update html files, content might have changed
-	if err := s.fileWriter(filePath, buf); err != nil {
+	if err := s.fileWriter(filePath, data); err != nil {
 		s.logger.Error("Writing to file failed",
 			log.String("URL", u.String()),
 			log.String("file", filePath),

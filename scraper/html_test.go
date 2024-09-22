@@ -44,5 +44,5 @@ func TestFixURLReferences(t *testing.T) {
 		"<a href=\"wp-content/uploads/document.pdf\" rel=\"doc\">Guide</a>\n" +
 		"<img src=\"test.jpg\" srcset=\"test-480w.jpg 480w, test-800w.jpg 800w\"/> \n\n" +
 		"</body></html>"
-	assert.Equal(t, expected, ref)
+	assert.Equal(t, expected, string(ref))
 }

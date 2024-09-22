@@ -1,7 +1,6 @@
 package scraper
 
 import (
-	"bytes"
 	"fmt"
 	"net/url"
 	"path"
@@ -14,9 +13,9 @@ import (
 
 var cssURLRe = regexp.MustCompile(`^url\(['"]?(.*?)['"]?\)$`)
 
-func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer {
+func (s *Scraper) checkCSSForUrls(url *url.URL, data []byte) []byte {
 	urls := make(map[string]string)
-	str := buf.String()
+	str := string(data)
 	css := scanner.New(str)
 
 	for {
@@ -56,7 +55,7 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 	}
 
 	if len(urls) == 0 {
-		return buf
+		return data
 	}
 
 	for ori, filePath := range urls {
@@ -67,5 +66,5 @@ func (s *Scraper) checkCSSForUrls(url *url.URL, buf *bytes.Buffer) *bytes.Buffer
 			log.String("fixed_url", fixed))
 	}
 
-	return bytes.NewBufferString(str)
+	return []byte(str)
 }
