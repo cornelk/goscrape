@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/cornelk/gotokit/log"
@@ -146,22 +147,35 @@ h1 {
 `)
 	empty := []byte(``)
 
-	startURL := "https://example.org/"
+	domain := "example.org"
+	fileReference := "/background.jpg"
+	fullURL := "https://" + domain
+
 	urls := map[string][]byte{
-		"https://example.org/":               indexPage,
-		"https://example.org/background.jpg": empty,
+		fullURL + "/":           indexPage,
+		fullURL + fileReference: empty,
 	}
 
-	scraper := newTestScraper(t, startURL, urls)
+	scraper := newTestScraper(t, fullURL+"/", urls)
 	require.NotNil(t, scraper)
+
+	files := map[string][]byte{}
+	scraper.fileWriter = func(filePath string, data []byte) error {
+		files[filePath] = data
+		return nil
+	}
 
 	ctx := context.Background()
 	err := scraper.Start(ctx)
 	require.NoError(t, err)
 
 	expectedProcessed := map[string]struct{}{
-		"/":               {},
-		"/background.jpg": {},
+		"/":           {},
+		fileReference: {},
 	}
-	assert.Equal(t, expectedProcessed, scraper.processed)
+	require.Equal(t, expectedProcessed, scraper.processed)
+
+	ref := domain + "/index.html"
+	content := string(files[ref])
+	assert.True(t, strings.Contains(content, "url('/background.jpg')"))
 }
