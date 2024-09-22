@@ -1,7 +1,6 @@
 package scraper
 
 import (
-	"bytes"
 	"net/url"
 	"testing"
 
@@ -32,8 +31,7 @@ func TestCSSProcessor(t *testing.T) {
 	u, _ := url.Parse("http://localhost")
 	for input, expected := range fixtures {
 		s.imagesQueue = nil
-		buf := bytes.NewBufferString(input)
-		s.cssProcessor(u, buf)
+		s.cssProcessor(u, []byte(input))
 
 		if expected == "" {
 			assert.Empty(t, s.imagesQueue)

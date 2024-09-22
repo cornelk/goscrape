@@ -1,7 +1,6 @@
 package scraper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -16,7 +15,7 @@ import (
 
 // assetProcessor is a processor of a downloaded asset that can transform
 // a downloaded file content before it will be stored on disk.
-type assetProcessor func(URL *url.URL, buf *bytes.Buffer) *bytes.Buffer
+type assetProcessor func(URL *url.URL, data []byte) []byte
 
 var tagsWithReferences = []string{
 	htmlindex.LinkTag,
@@ -81,7 +80,7 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 	}
 
 	s.logger.Info("Downloading asset", log.String("url", urlFull))
-	buf, _, err := s.httpDownloader(ctx, u)
+	data, _, err := s.httpDownloader(ctx, u)
 	if err != nil {
 		s.logger.Error("Downloading asset failed",
 			log.String("url", urlFull),
@@ -90,10 +89,10 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 	}
 
 	if processor != nil {
-		buf = processor(u, buf)
+		data = processor(u, data)
 	}
 
-	if err = s.fileWriter(filePath, buf); err != nil {
+	if err = s.fileWriter(filePath, data); err != nil {
 		s.logger.Error("Writing asset file failed",
 			log.String("url", urlFull),
 			log.String("file", filePath),
@@ -103,7 +102,7 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 	return nil
 }
 
-func (s *Scraper) cssProcessor(baseURL *url.URL, buf *bytes.Buffer) *bytes.Buffer {
+func (s *Scraper) cssProcessor(baseURL *url.URL, data []byte) []byte {
 	urls := make(map[string]string)
 
 	processor := func(token *css.Token, data string, u *url.URL) {
@@ -115,14 +114,13 @@ func (s *Scraper) cssProcessor(baseURL *url.URL, buf *bytes.Buffer) *bytes.Buffe
 		urls[token.Value] = resolved
 	}
 
-	data := buf.String()
-	css.Process(s.logger, baseURL, data, processor)
+	str := string(data)
+	css.Process(s.logger, baseURL, str, processor)
 
 	if len(urls) == 0 {
-		return buf
+		return data
 	}
 
-	str := buf.String()
 	for ori, filePath := range urls {
 		fixed := fmt.Sprintf("url(%s)", filePath)
 		str = strings.ReplaceAll(str, ori, fixed)
@@ -131,5 +129,5 @@ func (s *Scraper) cssProcessor(baseURL *url.URL, buf *bytes.Buffer) *bytes.Buffe
 			log.String("fixed_url", fixed))
 	}
 
-	return bytes.NewBufferString(str)
+	return []byte(str)
 }

@@ -1,7 +1,6 @@
 package scraper
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,7 +21,7 @@ func (s *Scraper) createDownloadPath(path string) error {
 	return nil
 }
 
-func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {
+func (s *Scraper) writeFile(filePath string, data []byte) error {
 	dir := filepath.Dir(filePath)
 	if len(dir) < len(s.URL.Host) { // nothing to append if it is the root dir
 		dir = filepath.Join(".", s.URL.Host, dir)
@@ -38,7 +37,7 @@ func (s *Scraper) writeFile(filePath string, buf *bytes.Buffer) error {
 		return fmt.Errorf("creating file '%s': %w", filePath, err)
 	}
 
-	if _, err = f.Write(buf.Bytes()); err != nil {
+	if _, err = f.Write(data); err != nil {
 		// nolint: wrapcheck
 		_ = f.Close() // try to close and remove file but return the first error
 		_ = os.Remove(filePath)

@@ -12,7 +12,7 @@ import (
 	"github.com/cornelk/gotokit/log"
 )
 
-func (s *Scraper) downloadURL(ctx context.Context, u *url.URL) (*bytes.Buffer, *url.URL, error) {
+func (s *Scraper) downloadURL(ctx context.Context, u *url.URL) ([]byte, *url.URL, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("creating HTTP request: %w", err)
@@ -50,7 +50,7 @@ func (s *Scraper) downloadURL(ctx context.Context, u *url.URL) (*bytes.Buffer, *
 	if _, err := io.Copy(buf, resp.Body); err != nil {
 		return nil, nil, fmt.Errorf("reading HTTP request body: %w", err)
 	}
-	return buf, resp.Request.URL, nil
+	return buf.Bytes(), resp.Request.URL, nil
 }
 
 func Headers(headers []string) http.Header {
