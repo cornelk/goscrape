@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/cornelk/gotokit/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/html"
@@ -91,7 +92,8 @@ func testSetup(t *testing.T, input []byte) *Index {
 	ur, err := url.Parse("https://domain.com/")
 	require.NoError(t, err)
 
-	idx := New()
+	logger := log.NewTestLogger(t)
+	idx := New(logger)
 	idx.Index(ur, doc)
 
 	return idx

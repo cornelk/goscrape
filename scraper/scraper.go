@@ -219,7 +219,7 @@ func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint)
 		return fmt.Errorf("parsing HTML: %w", err)
 	}
 
-	index := htmlindex.New()
+	index := htmlindex.New(s.logger)
 	index.Index(u, doc)
 
 	s.storeDownload(u, data, doc, index, fileExtension)

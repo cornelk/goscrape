@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/cornelk/gotokit/log"
@@ -128,4 +129,53 @@ func TestScraperAttributes(t *testing.T) {
 		"/bg.gif": {},
 	}
 	assert.Equal(t, expectedProcessed, scraper.processed)
+}
+
+func TestScraperInternalCss(t *testing.T) {
+	indexPage := []byte(`
+<html>
+<head>
+<style>
+h1 {
+  background-image: url('/background.jpg');
+}
+</style>
+</head>
+<body>
+</body>
+</html>
+`)
+	empty := []byte(``)
+
+	domain := "example.org"
+	fileReference := "/background.jpg"
+	fullURL := "https://" + domain
+
+	urls := map[string][]byte{
+		fullURL + "/":           indexPage,
+		fullURL + fileReference: empty,
+	}
+
+	scraper := newTestScraper(t, fullURL+"/", urls)
+	require.NotNil(t, scraper)
+
+	files := map[string][]byte{}
+	scraper.fileWriter = func(filePath string, data []byte) error {
+		files[filePath] = data
+		return nil
+	}
+
+	ctx := context.Background()
+	err := scraper.Start(ctx)
+	require.NoError(t, err)
+
+	expectedProcessed := map[string]struct{}{
+		"/":           {},
+		fileReference: {},
+	}
+	require.Equal(t, expectedProcessed, scraper.processed)
+
+	ref := domain + "/index.html"
+	content := string(files[ref])
+	assert.True(t, strings.Contains(content, "url('/background.jpg')"))
 }
