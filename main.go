@@ -23,8 +23,8 @@ var (
 )
 
 type arguments struct {
-	Exclude []string `arg:"-n,--include" help:"only include URLs with PERL Regular Expressions support"`
-	Include []string `arg:"-x,--exclude" help:"exclude URLs with PERL Regular Expressions support"`
+	Include []string `arg:"-n,--include" help:"only include URLs with PERL Regular Expressions support"`
+	Exclude []string `arg:"-x,--exclude" help:"exclude URLs with PERL Regular Expressions support"`
 	Output  string   `arg:"-o,--output" help:"output directory to write files to"`
 	URLs    []string `arg:"positional"`
 
