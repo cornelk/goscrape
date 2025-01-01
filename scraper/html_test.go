@@ -33,7 +33,7 @@ func TestFixURLReferences(t *testing.T) {
 	doc, err := html.Parse(buf)
 	require.NoError(t, err)
 
-	index := htmlindex.New()
+	index := htmlindex.New(logger)
 	index.Index(s.URL, doc)
 
 	ref, fixed, err := s.fixURLReferences(s.URL, doc, index)

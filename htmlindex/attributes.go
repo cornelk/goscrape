@@ -1,13 +1,29 @@
 package htmlindex
 
+import (
+	"net/url"
+
+	"github.com/cornelk/gotokit/log"
+	"golang.org/x/net/html"
+)
+
+type nodeAttributeParserData struct {
+	logger    *log.Logger
+	url       *url.URL
+	node      *html.Node
+	attribute string
+	value     string
+}
+
 // nodeAttributeParser returns the URL values of the attribute of the node and
 // whether the attribute has been processed.
-type nodeAttributeParser func(attribute, value string) ([]string, bool)
+type nodeAttributeParser func(data nodeAttributeParserData) ([]string, bool)
 
 type Node struct {
 	Attributes []string
 
-	parser nodeAttributeParser
+	noChildParsing bool
+	parser         nodeAttributeParser
 }
 
 const (
@@ -27,6 +43,7 @@ const (
 	ImgTag    = "img"
 	LinkTag   = "link"
 	ScriptTag = "script"
+	StyleTag  = "style"
 )
 
 // Nodes describes the HTML tags and their attributes that can contain URL.
@@ -46,6 +63,10 @@ var Nodes = map[string]Node{
 	},
 	ScriptTag: {
 		Attributes: []string{SrcAttribute},
+	},
+	StyleTag: {
+		noChildParsing: true,
+		parser:         styleParser,
 	},
 }
 

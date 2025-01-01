@@ -129,3 +129,66 @@ func TestScraperAttributes(t *testing.T) {
 	}
 	assert.Equal(t, expectedProcessed, scraper.processed)
 }
+
+func TestScraperInternalCss(t *testing.T) {
+	indexPage := []byte(`
+<html>
+<head>
+<style>
+h1 {
+  background-image: url('https://example.org/background.jpg');
+}
+h2 {
+  background-image: url('/img/bg.jpg');
+}
+h3 {
+  background-image: url(bg3.jpg);
+}
+</style>
+</head>
+<body>
+</body>
+</html>
+`)
+	empty := []byte(``)
+
+	domain := "example.org"
+	file1Reference := "background.jpg"
+	file2Reference := "img/bg.jpg"
+	file3Reference := "bg3.jpg"
+	fullURL := "https://" + domain
+
+	urls := map[string][]byte{
+		fullURL + "/":                  indexPage,
+		fullURL + "/" + file1Reference: empty,
+		fullURL + "/" + file2Reference: empty,
+		fullURL + "/" + file3Reference: empty,
+	}
+
+	scraper := newTestScraper(t, fullURL+"/", urls)
+	require.NotNil(t, scraper)
+
+	files := map[string][]byte{}
+	scraper.fileWriter = func(filePath string, data []byte) error {
+		files[filePath] = data
+		return nil
+	}
+
+	ctx := context.Background()
+	err := scraper.Start(ctx)
+	require.NoError(t, err)
+
+	expectedProcessed := map[string]struct{}{
+		"/":                  {},
+		"/" + file1Reference: {},
+		"/" + file2Reference: {},
+		"/" + file3Reference: {},
+	}
+	require.Equal(t, expectedProcessed, scraper.processed)
+
+	ref := domain + "/index.html"
+	content := string(files[ref])
+	assert.Contains(t, content, "url('"+file1Reference+"')")
+	assert.Contains(t, content, "url('"+file2Reference+"')")
+	assert.Contains(t, content, "url("+file3Reference+")")
+}
