@@ -45,7 +45,7 @@ func Process(logger *log.Logger, url *url.URL, data string, processor urlProcess
 				log.Err(err))
 			continue
 		}
-		u = url.ResolveReference(u)
+
 		processor(token, src, u)
 	}
 }

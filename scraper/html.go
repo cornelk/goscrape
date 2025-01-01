@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/cornelk/goscrape/css"
 	"github.com/cornelk/goscrape/htmlindex"
 	"github.com/cornelk/gotokit/log"
 	"golang.org/x/net/html"
@@ -48,8 +49,15 @@ func (s *Scraper) fixHTMLNodeURLs(baseURL *url.URL, relativeToRoot string, index
 		urls := index.Nodes(tag)
 		for _, nodes := range urls {
 			for _, node := range nodes {
-				if s.fixNodeURL(baseURL, nodeInfo.Attributes, node, isHyperlink, relativeToRoot) {
-					changed = true
+				switch node.Data {
+				case htmlindex.StyleTag:
+					if s.fixScriptNodeURL(baseURL, node, isHyperlink, relativeToRoot) {
+						changed = true
+					}
+				default:
+					if s.fixNodeURL(baseURL, nodeInfo.Attributes, node, isHyperlink, relativeToRoot) {
+						changed = true
+					}
 				}
 			}
 		}
@@ -112,6 +120,42 @@ func (s *Scraper) fixNodeURL(baseURL *url.URL, attributes []string, node *html.N
 	return changed
 }
 
+// fixScriptNodeURL fixes the URL references of a HTML script node to point to a relative file name.
+// It returns whether any attribute value bas been adjusted.
+func (s *Scraper) fixScriptNodeURL(baseURL *url.URL, node *html.Node,
+	isHyperlink bool, relativeToRoot string) bool {
+
+	if node.FirstChild == nil {
+		return false
+	}
+
+	urls := map[string]string{}
+
+	processor := func(_ *css.Token, before string, _ *url.URL) {
+		adjusted := resolveURL(baseURL, before, s.URL.Host, isHyperlink, relativeToRoot)
+		if before != adjusted {
+			urls[before] = adjusted
+		}
+	}
+
+	cssData := node.FirstChild.Data
+	css.Process(s.logger, baseURL, cssData, processor)
+
+	var changed bool
+
+	for before, filePath := range urls {
+		cssData = replaceCSSUrls(before, filePath, cssData)
+		s.logger.Debug("CSS Element relinked",
+			log.String("url", before),
+			log.String("fixed_url", filePath))
+		changed = true
+	}
+
+	node.FirstChild.Data = cssData
+
+	return changed
+}
+
 func resolveSrcSetURLs(base *url.URL, srcSetValue, mainPageHost string, isHyperlink bool, relativeToRoot string) string {
 	// split the set of responsive images
 	values := strings.Split(srcSetValue, ",")
@@ -124,4 +168,18 @@ func resolveSrcSetURLs(base *url.URL, srcSetValue, mainPageHost string, isHyperl
 	}
 
 	return strings.Join(values, ", ")
+}
+
+func replaceCSSUrls(before, after, content string) string {
+	prefixes := []string{
+		"\"", "'", "",
+	}
+
+	for _, prefix := range prefixes {
+		wrong := fmt.Sprintf("url(%s%s%s)", prefix, before, prefix)
+		fixed := "url('" + after + "')"
+		content = strings.ReplaceAll(content, wrong, fixed)
+	}
+
+	return content
 }

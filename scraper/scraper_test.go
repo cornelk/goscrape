@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/cornelk/gotokit/log"
@@ -137,7 +136,13 @@ func TestScraperInternalCss(t *testing.T) {
 <head>
 <style>
 h1 {
-  background-image: url('/background.jpg');
+  background-image: url('https://example.org/background.jpg');
+}
+h2 {
+  background-image: url('/img/bg.jpg');
+}
+h3 {
+  background-image: url(bg3.jpg);
 }
 </style>
 </head>
@@ -148,12 +153,16 @@ h1 {
 	empty := []byte(``)
 
 	domain := "example.org"
-	fileReference := "/background.jpg"
+	file1Reference := "background.jpg"
+	file2Reference := "img/bg.jpg"
+	file3Reference := "bg3.jpg"
 	fullURL := "https://" + domain
 
 	urls := map[string][]byte{
-		fullURL + "/":           indexPage,
-		fullURL + fileReference: empty,
+		fullURL + "/":                  indexPage,
+		fullURL + "/" + file1Reference: empty,
+		fullURL + "/" + file2Reference: empty,
+		fullURL + "/" + file3Reference: empty,
 	}
 
 	scraper := newTestScraper(t, fullURL+"/", urls)
@@ -170,12 +179,16 @@ h1 {
 	require.NoError(t, err)
 
 	expectedProcessed := map[string]struct{}{
-		"/":           {},
-		fileReference: {},
+		"/":                  {},
+		"/" + file1Reference: {},
+		"/" + file2Reference: {},
+		"/" + file3Reference: {},
 	}
 	require.Equal(t, expectedProcessed, scraper.processed)
 
 	ref := domain + "/index.html"
 	content := string(files[ref])
-	assert.True(t, strings.Contains(content, "url('/background.jpg')"))
+	assert.Contains(t, content, "url('"+file1Reference+"')")
+	assert.Contains(t, content, "url('"+file2Reference+"')")
+	assert.Contains(t, content, "url("+file3Reference+")")
 }

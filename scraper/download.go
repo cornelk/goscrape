@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/url"
 	"path"
-	"strings"
 
 	"github.com/cornelk/goscrape/css"
 	"github.com/cornelk/goscrape/htmlindex"
@@ -114,20 +113,19 @@ func (s *Scraper) cssProcessor(baseURL *url.URL, data []byte) []byte {
 		urls[token.Value] = resolved
 	}
 
-	str := string(data)
-	css.Process(s.logger, baseURL, str, processor)
+	cssData := string(data)
+	css.Process(s.logger, baseURL, cssData, processor)
 
 	if len(urls) == 0 {
 		return data
 	}
 
 	for ori, filePath := range urls {
-		fixed := fmt.Sprintf("url(%s)", filePath)
-		str = strings.ReplaceAll(str, ori, fixed)
+		cssData = replaceCSSUrls(ori, filePath, cssData)
 		s.logger.Debug("CSS Element relinked",
 			log.String("url", ori),
-			log.String("fixed_url", fixed))
+			log.String("fixed_url", filePath))
 	}
 
-	return []byte(str)
+	return []byte(cssData)
 }
