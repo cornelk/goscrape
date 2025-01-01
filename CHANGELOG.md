@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.0] - 2025-01-01
+
+Added:
+
+* body background attribute support
+* fragments at the end of the URL are now filtered
+* support srcset attribute for image downloading
+
+Fixed:
+
+* inline css gets processed correctly
+* --include / --exclude parameter list handling
+
 ## [v0.2.0] - 2024-06-21
 
 Added:
