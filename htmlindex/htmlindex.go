@@ -3,6 +3,7 @@ package htmlindex
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"sort"
 	"strings"
 
@@ -97,7 +98,7 @@ func (idx *Index) Nodes(tag string) map[string][]*html.Node {
 
 // nodeAttributeURLs returns resolved URLs based on the base URL and the HTML node attribute values.
 func (idx *Index) nodeAttributeURLs(baseURL *url.URL, node *html.Node,
-	parser nodeAttributeParser, attributeName ...string) []string {
+	parser nodeAttributeParser, attributeNames ...string) []string {
 
 	var results []string
 
@@ -114,14 +115,7 @@ func (idx *Index) nodeAttributeURLs(baseURL *url.URL, node *html.Node,
 	}
 
 	for _, attr := range node.Attr {
-		var process bool
-		for _, name := range attributeName {
-			if attr.Key == name {
-				process = true
-				break
-			}
-		}
-		if !process {
+		if !slices.Contains(attributeNames, attr.Key) {
 			continue
 		}
 
@@ -146,7 +140,7 @@ func (idx *Index) nodeAttributeURLs(baseURL *url.URL, node *html.Node,
 	}
 
 	// special case to support style tag
-	if len(attributeName) == 0 && parser != nil {
+	if len(attributeNames) == 0 && parser != nil {
 		data := nodeAttributeParserData{
 			logger: idx.logger,
 			url:    baseURL,

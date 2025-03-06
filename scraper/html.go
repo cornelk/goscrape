@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/cornelk/goscrape/css"
@@ -74,14 +75,7 @@ func (s *Scraper) fixNodeURL(baseURL *url.URL, attributes []string, node *html.N
 	var changed bool
 
 	for i, attr := range node.Attr {
-		var process bool
-		for _, name := range attributes {
-			if attr.Key == name {
-				process = true
-				break
-			}
-		}
-		if !process {
+		if !slices.Contains(attributes, attr.Key) {
 			continue
 		}
 
