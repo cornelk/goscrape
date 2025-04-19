@@ -79,10 +79,7 @@ func urlRelativeToOther(src, base *url.URL) string {
 	srcSplits := strings.Split(src.Path, "/")
 	baseSplits := strings.Split(getPageFilePath(base), "/")
 
-	for {
-		if len(srcSplits) == 0 || len(baseSplits) == 0 {
-			break
-		}
+	for len(srcSplits) > 0 && len(baseSplits) > 0 {
 		if len(srcSplits[0]) == 0 {
 			srcSplits = srcSplits[1:]
 			continue

@@ -1,7 +1,6 @@
+version: "2"
 run:
-  timeout: 5m
   modules-download-mode: readonly
-
 linters:
   enable:
     - asasalint # check for pass []any as any in variadic func(...any)
@@ -20,16 +19,12 @@ linters:
     - errname # Checks that errors are prefixed with the `Err` and error types are suffixed with the `Error`
     - errorlint # finds code that will cause problems with the error wrapping scheme introduced in Go 1.13
     - funlen # Tool for detection of long functions
-    - gci # controls golang package import order and makes it always deterministic
     - gocheckcompilerdirectives # Checks that go compiler directive comments (//go:) are valid
     - gocognit # Computes and checks the cognitive complexity of functions
     - goconst # Finds repeated strings that could be replaced by a constant
     - gocritic # Provides diagnostics that check for bugs, performance and style issues
     - gocyclo # Computes and checks the cyclomatic complexity of functions
     - godot # Check if comments end in a period
-    - gofmt # checks whether code was gofmt-ed
-    - goimports # Check import statements are formatted according to the 'goimport' command
-    - gosimple # Linter for Go source code that specializes in simplifying a code
     - govet # reports suspicious constructs, such as Printf calls with wrong arguments
     - grouper # An analyzer to analyze expression groups
     - ineffassign # Detects when assignments to existing variables are not used
@@ -50,12 +45,9 @@ linters:
     - reassign # Checks that package variables are not reassigned
     - revive # drop-in replacement of golint
     - staticcheck # drop-in replacement of go vet
-    - stylecheck # Stylecheck is a replacement for golint
-    - tenv # detects using os.Setenv instead of t.Setenv
     - testifylint # Checks usage of github.com/stretchr/testify
     - thelper # checks the consistency of test helpers
     - tparallel # detects inappropriate usage of t.Parallel()
-    - typecheck # parses and type-checks Go code
     - unconvert # Remove unnecessary type conversions
     - unparam # Reports unused function parameters
     - unused # Checks Go code for unused constants, variables, functions and types
@@ -63,16 +55,19 @@ linters:
     - wastedassign # finds wasted assignment statements
     - whitespace # detects leading and trailing whitespace
     - wrapcheck # Checks that errors returned from external packages are wrapped
-
-issues:
-  exclude-rules:
-    - linters:
-        - err113
-      text: "do not define dynamic errors"
-
-linters-settings:
-  cyclop:
-    max-complexity: 15
-  whitespace:
-    multi-if: true # Enforces newlines (or comments) after every multi-line if statement
-    multi-func: true # Enforces newlines (or comments) after every multi-line function signature
+  settings:
+    cyclop:
+      max-complexity: 15
+    whitespace:
+      multi-if: true # Enforces newlines (or comments) after every multi-line if statement
+      multi-func: true # Enforces newlines (or comments) after every multi-line function signature
+  exclusions:
+    rules:
+      - linters:
+          - err113
+        text: do not define dynamic errors
+formatters:
+  enable:
+    - gci # controls golang package import order and makes it always deterministic
+    - gofmt # checks whether code was gofmt-ed
+    - goimports # Check import statements are formatted according to the 'goimport' command

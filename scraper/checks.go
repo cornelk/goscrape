@@ -1,3 +1,4 @@
+// Package scraper provides a web scraper that can download a website and its assets.
 package scraper
 
 import (

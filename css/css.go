@@ -1,3 +1,4 @@
+// Package css provides a CSS parser that can process CSS data and call a processor for every found URL.
 package css
 
 import (
@@ -11,6 +12,7 @@ import (
 
 var cssURLRe = regexp.MustCompile(`^url\(['"]?(.*?)['"]?\)$`)
 
+// Token represents a token and the corresponding string.
 type Token = scanner.Token
 
 type urlProcessor func(token *Token, data string, url *url.URL)

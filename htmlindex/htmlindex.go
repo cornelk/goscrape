@@ -1,3 +1,4 @@
+// Package htmlindex provides an index for all HTML tags of relevance for scraping.
 package htmlindex
 
 import (
