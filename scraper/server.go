@@ -15,6 +15,7 @@ var mimeTypes = map[string]string{
 	".asp": "text/html; charset=utf-8",
 }
 
+// ServeDirectory serves a directory on a given port as a web server.
 func ServeDirectory(ctx context.Context, path string, port int16, logger *log.Logger) error {
 	fs := http.FileServer(http.Dir(path))
 	mux := http.NewServeMux()

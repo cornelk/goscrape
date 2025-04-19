@@ -19,6 +19,7 @@ type nodeAttributeParserData struct {
 // whether the attribute has been processed.
 type nodeAttributeParser func(data nodeAttributeParserData) ([]string, bool)
 
+// Node describes an HTML tag and its attributes that can contain URLs.
 type Node struct {
 	Attributes []string
 
@@ -26,6 +27,7 @@ type Node struct {
 	parser         nodeAttributeParser
 }
 
+// nolint: revive
 const (
 	BackgroundAttribute = "background"
 	HrefAttribute       = "href"
@@ -37,6 +39,7 @@ const (
 	SrcSetAttribute     = "srcset"
 )
 
+// nolint: revive
 const (
 	ATag      = "a"
 	BodyTag   = "body"

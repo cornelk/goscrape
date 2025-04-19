@@ -53,6 +53,7 @@ func (s *Scraper) downloadURL(ctx context.Context, u *url.URL) ([]byte, *url.URL
 	return buf.Bytes(), resp.Request.URL, nil
 }
 
+// Headers converts a slice of strings to a http.Header.
 func Headers(headers []string) http.Header {
 	h := http.Header{}
 	for _, header := range headers {

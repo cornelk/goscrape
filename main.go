@@ -1,3 +1,4 @@
+// Package main provides a command line tool to scrape websites and create an offline browsable version on the disk.
 package main
 
 import (
