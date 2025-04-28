@@ -165,8 +165,11 @@ func srcSetValueSplitter(data nodeAttributeParserData) ([]string, bool) {
 
 	for i, value := range values {
 		value = strings.TrimSpace(value)
+		// remove extra query param arguments that sometimes remain attached
+		value = strings.Split(value, "?")[0]
 		// remove the width in pixels after the url
-		values[i], _, _ = strings.Cut(value, " ")
+		value, _, _ = strings.Cut(value, " ")
+		values[i] = value
 	}
 
 	return values, true

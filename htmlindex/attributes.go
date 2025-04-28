@@ -32,17 +32,21 @@ const (
 	BackgroundAttribute = "background"
 	HrefAttribute       = "href"
 
-	DataSrcAttribute = "data-src"
-	SrcAttribute     = "src"
+	DataSrcAttribute   = "data-src"
+	SrcAttribute       = "src"
+	DataImageAttribute = "data-image"
 
 	DataSrcSetAttribute = "data-srcset"
 	SrcSetAttribute     = "srcset"
+
+	DataUrlAttribute = "data-url"
 )
 
 // nolint: revive
 const (
 	ATag      = "a"
 	BodyTag   = "body"
+	DivTag    = "div"
 	ImgTag    = "img"
 	LinkTag   = "link"
 	ScriptTag = "script"
@@ -57,8 +61,11 @@ var Nodes = map[string]Node{
 	BodyTag: {
 		Attributes: []string{BackgroundAttribute},
 	},
+	DivTag: {
+		Attributes: []string{DataUrlAttribute},
+	},
 	ImgTag: {
-		Attributes: []string{SrcAttribute, DataSrcAttribute, SrcSetAttribute, DataSrcSetAttribute},
+		Attributes: []string{SrcAttribute, DataSrcAttribute, SrcSetAttribute, DataSrcSetAttribute, DataImageAttribute},
 		parser:     srcSetValueSplitter,
 	},
 	LinkTag: {

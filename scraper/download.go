@@ -21,6 +21,7 @@ var tagsWithReferences = []string{
 	htmlindex.ScriptTag,
 	htmlindex.BodyTag,
 	htmlindex.StyleTag,
+	htmlindex.DivTag,
 }
 
 func (s *Scraper) downloadReferences(ctx context.Context, index *htmlindex.Index) error {
