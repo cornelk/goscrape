@@ -152,7 +152,7 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 	s.dirCreator = s.createDownloadPath
 	s.fileExistenceCheck = s.fileExists
 	s.fileWriter = s.writeFile
-	s.httpDownloader = s.downloadURL
+	s.httpDownloader = s.downloadURLWithRetries
 
 	if s.config.Username != "" {
 		s.auth = "Basic " + base64.StdEncoding.EncodeToString([]byte(s.config.Username+":"+s.config.Password))
