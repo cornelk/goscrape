@@ -253,7 +253,6 @@ func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint)
 func (s *Scraper) storeDownload(u *url.URL, data []byte, doc *html.Node,
 	index *htmlindex.Index, fileExtension string) {
 
-	isAPage := false
 	if fileExtension == "" {
 		fixed, hasChanges, err := s.fixURLReferences(u, doc, index)
 		if err != nil {
@@ -266,11 +265,11 @@ func (s *Scraper) storeDownload(u *url.URL, data []byte, doc *html.Node,
 		if hasChanges {
 			data = fixed
 		}
-		isAPage = true
 	}
 
-	filePath := s.getFilePath(u, isAPage)
+	filePath := s.getFilePath(u)
 	// always update html files, content might have changed
+	s.logger.Debug(fmt.Sprintf("Writing file to %s", filePath))
 	if err := s.fileWriter(filePath, data); err != nil {
 		s.logger.Error("Writing to file failed",
 			log.String("URL", u.String()),

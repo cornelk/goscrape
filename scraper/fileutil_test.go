@@ -38,7 +38,7 @@ func TestGetFilePath(t *testing.T) {
 		URL, err := url.Parse(fix.DownloadURL)
 		require.NoError(t, err)
 
-		output := s.getFilePath(URL, true)
+		output := s.getFilePath(URL)
 		assert.Equal(t, fix.ExpectedFilePath, output)
 	}
 }
