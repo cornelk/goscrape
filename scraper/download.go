@@ -73,8 +73,9 @@ func (s *Scraper) downloadAsset(ctx context.Context, u *url.URL, processor asset
 		return nil
 	}
 
-	filePath := s.getFilePath(u, false)
+	filePath := s.getFilePath(u)
 	if s.fileExists(filePath) {
+		s.logger.Warn(fmt.Sprintf("Asset %s already exists at %s", urlFull, filePath))
 		return nil
 	}
 
