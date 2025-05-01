@@ -8,17 +8,24 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/cornelk/gotokit/app"
 	"github.com/cornelk/gotokit/log"
+)
+
+var (
+	maxRetries = 10
+	retryDelay = 1500 * time.Millisecond
+
+	errExhaustedRetries = errors.New("exhausted retries")
 )
 
 func (s *Scraper) downloadURL(ctx context.Context, u *url.URL) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("creating HTTP request: %w", err)
 	}
 
 	req.Header.Set("User-Agent", s.config.UserAgent)
@@ -33,44 +40,42 @@ func (s *Scraper) downloadURL(ctx context.Context, u *url.URL) (*http.Response, 
 	}
 
 	resp, err := s.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("executing HTTP request: %w", err)
+	}
 
 	return resp, nil
 }
 
-func (s *Scraper) downloadURLWithRetriesFor429(ctx context.Context, u *url.URL) (*http.Response, error) {
-	maxRetries := 10
-
-	for i := 0; i < maxRetries; i++ {
-		resp, err := s.downloadURL(ctx, u)
-		if resp != nil {
-			if resp.StatusCode == http.StatusTooManyRequests {
-				s.logger.Warn(fmt.Sprintf("Too Many Requests. Retrying again (%s/%s)", strconv.Itoa(i+1), strconv.Itoa(maxRetries)), log.String("url", u.String()))
-				// Wait a bit and try again
-				time.Sleep(time.Duration((i+1)*1500) * time.Millisecond) // max total of 82.5 seconds within 10 retries using exponential backoff on each retry
-				continue
-			} else {
-				return resp, err
-			}
-		} else if err != nil {
-			return nil, err
-		}
-		// Success
-		return resp, nil
-	}
-	// Exhausted retries
-	err := errors.New("Exhausted retries for URL " + u.String())
-	return nil, err
-}
-
 func (s *Scraper) downloadURLWithRetries(ctx context.Context, u *url.URL) ([]byte, *url.URL, error) {
+	var err error
+	var resp *http.Response
 
-	resp, err := s.downloadURLWithRetriesFor429(ctx, u)
-	if err != nil {
-		return nil, nil, fmt.Errorf("sending HTTP request: %w", err)
+	for retries := range maxRetries + 2 {
+		if retries == maxRetries+1 {
+			return nil, nil, fmt.Errorf("%w for URL %s", errExhaustedRetries, u)
+		}
+
+		resp, err = s.downloadURL(ctx, u)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			s.logger.Warn("Too Many Requests. Retrying again",
+				log.Int("num", retries+1),
+				log.Int("max", maxRetries),
+				log.String("url", u.String()))
+
+			// Wait a bit and try again using exponential backoff on each retry
+			if err := app.Sleep(ctx, (time.Duration(retries)+1)*retryDelay); err != nil {
+				return nil, nil, fmt.Errorf("sleeping between retries: %w", err)
+			}
+			continue
+		}
+		break
 	}
-	if resp == nil {
-		return nil, nil, fmt.Errorf("HTTP response is nil for %v", u)
-	}
+
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			s.logger.Error("Closing HTTP Request body failed",
