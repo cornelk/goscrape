@@ -13,11 +13,8 @@ const (
 )
 
 // getFilePath returns a file path for a URL to store the URL content in.
-func (s *Scraper) getFilePath(url *url.URL, isAPage bool) string {
-	fileName := url.Path
-	if isAPage {
-		fileName = getPageFilePath(url)
-	}
+func (s *Scraper) getFilePath(url *url.URL) string {
+	fileName := getPageFilePath(url)
 
 	var externalHost string
 	if url.Host != s.URL.Host {
