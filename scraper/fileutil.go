@@ -18,11 +18,17 @@ const (
 )
 
 // getFilePath returns a file path for a URL to store the URL content in.
+// The isAPage parameter is crucial: it tells us whether this URL contains HTML content
+// that should be treated as a web page (with .html extensions and directory indexing)
+// or if it's a binary file that should keep its original path unchanged.
+// Without this distinction, binary files would get corrupted paths like image.jpg.html.
 func (s *Scraper) getFilePath(url *url.URL, isAPage bool) string {
 	fileName := url.Path
 	if isAPage {
+		// This is HTML content - apply web page naming conventions
 		fileName = getPageFilePath(url)
 	}
+	// If not a page, keep the original URL path for binary files
 
 	var externalHost string
 	if url.Host != s.URL.Host {
@@ -46,7 +52,9 @@ func (s *Scraper) getFilePath(url *url.URL, isAPage bool) string {
 	return filepath.Join(s.config.OutputDirectory, s.URL.Host, externalHost, fileName)
 }
 
-// getPageFilePath returns a filename for a URL that represents a page.
+// getPageFilePath returns a filename for a URL that represents a web page.
+// This function adds .html extensions and handles directory indexing,
+// which is what we want for HTML content but NOT for binary files like images or PDFs.
 func getPageFilePath(url *url.URL) string {
 	fileName := url.Path
 

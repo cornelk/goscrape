@@ -253,6 +253,11 @@ func (s *Scraper) processURL(ctx context.Context, u *url.URL, currentDepth uint)
 func (s *Scraper) storeDownload(u *url.URL, data []byte, doc *html.Node,
 	index *htmlindex.Index, fileExtension string) {
 
+	// We need to distinguish between HTML pages and binary files (images, PDFs, etc.)
+	// because they need different file path handling:
+	// - HTML pages: add .html extension, handle directory indexes like /about -> /about.html
+	// - Binary files: keep original path, so /photo.jpg stays /photo.jpg, not /photo.jpg.html
+	// This prevents breaking binary downloads that were working before.
 	isAPage := false
 	if fileExtension == "" {
 		fixed, hasChanges, err := s.fixURLReferences(u, doc, index)
@@ -266,6 +271,7 @@ func (s *Scraper) storeDownload(u *url.URL, data []byte, doc *html.Node,
 		if hasChanges {
 			data = fixed
 		}
+		// Only HTML content gets processed as a "page" - binary files stay as-is
 		isAPage = true
 	}
 
