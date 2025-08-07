@@ -89,7 +89,7 @@ func TestScraperLinks(t *testing.T) {
 	expectedProcessed := set.NewFromSlice([]string{
 		"/",
 		"/page2",
-		"/sub/",
+		"/sub",
 		"/style.css",
 	})
 	assert.Equal(t, expectedProcessed, scraper.processed)
