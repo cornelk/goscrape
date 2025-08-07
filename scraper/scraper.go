@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/cornelk/goscrape/htmlindex"
+	"github.com/cornelk/gotokit/httpclient"
 	"github.com/cornelk/gotokit/log"
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
 	"golang.org/x/net/html"
-	"golang.org/x/net/proxy"
 )
 
 // Config contains the scraper configuration.
@@ -94,11 +94,6 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 		errs = append(errs, err)
 	}
 
-	proxyURL, err := url.Parse(cfg.Proxy)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
 	if errs != nil {
 		return nil, errors.Join(errs...)
 	}
@@ -112,25 +107,16 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 		return nil, err
 	}
 
-	client := &http.Client{
-		Jar:     cookies,
-		Timeout: time.Duration(cfg.Timeout) * time.Second,
+	// Create HTTP transport with proxy configuration
+	transport, err := httpclient.ProxyTransportFromConfig(cfg.Proxy)
+	if err != nil {
+		return nil, fmt.Errorf("creating proxy transport: %w", err)
 	}
 
-	if cfg.Proxy != "" {
-		dialer, err := proxy.FromURL(proxyURL, proxy.Direct)
-		if err != nil {
-			return nil, fmt.Errorf("creating proxy from URL: %w", err)
-		}
-
-		dialerCtx, ok := dialer.(proxy.ContextDialer)
-		if !ok {
-			return nil, errors.New("proxy dialer is not a context dialer")
-		}
-
-		client.Transport = &http.Transport{
-			DialContext: dialerCtx.DialContext,
-		}
+	client := &http.Client{
+		Jar:       cookies,
+		Timeout:   time.Duration(cfg.Timeout) * time.Second,
+		Transport: transport,
 	}
 
 	s := &Scraper{

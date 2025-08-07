@@ -40,7 +40,7 @@ type arguments struct {
 	SaveCookieFile string `arg:"--savecookiefile" help:"file to save the cookie content"`
 
 	Headers   []string `arg:"-h,--header" help:"HTTP header to use for scraping"`
-	Proxy     string   `arg:"-p,--proxy" help:"HTTP proxy to use for scraping"`
+	Proxy     string   `arg:"-p,--proxy" help:"proxy to use in format scheme://[user:password@]host:port (supports HTTP, HTTPS, SOCKS5 protocols)"`
 	User      string   `arg:"-u,--user" help:"user[:password] to use for HTTP authentication"`
 	UserAgent string   `arg:"-a,--useragent" help:"user agent to use for scraping"`
 

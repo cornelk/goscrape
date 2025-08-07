@@ -55,14 +55,6 @@ goscrape --serve website.com
 ## Options
 
 ```
-Scrape a website and create an offline browsable version on the disk.
-
-Usage: goscrape [--include INCLUDE] [--exclude EXCLUDE] [--output OUTPUT] [--depth DEPTH] [--imagequality IMAGEQUALITY] [--timeout TIMEOUT] [--serve SERVE] [--serverport SERVERPORT] [--cookiefile COOKIEFILE] [--savecookiefile SAVECOOKIEFILE] [--header HEADER] [--proxy PROXY] [--user USER] [--useragent USERAGENT] [--verbose] [URLS [URLS ...]]
-
-Positional arguments:
-  URLS
-
-Options:
   --include INCLUDE, -n INCLUDE
                          only include URLs with PERL Regular Expressions support
   --exclude EXCLUDE, -x EXCLUDE
@@ -86,7 +78,7 @@ Options:
   --header HEADER, -h HEADER
                          HTTP header to use for scraping
   --proxy PROXY, -p PROXY
-                         HTTP proxy to use for scraping
+                         proxy to use in format scheme://[user:password@]host:port (supports HTTP, HTTPS, SOCKS5 protocols)
   --user USER, -u USER   user[:password] to use for HTTP authentication
   --useragent USERAGENT, -a USERAGENT
                          user agent to use for scraping
@@ -102,4 +94,26 @@ cookies in the following format:
 
 ```
 [{"name":"user","value":"123"},{"name":"sessioe","value":"sid"}]
+```
+
+## Proxy Configuration
+
+The `--proxy` flag supports multiple proxy protocols for scraping through different types of proxy servers:
+
+### Supported Proxy Types
+
+- **HTTP proxies**: `http://proxy.example.com:8080`
+- **HTTPS proxies**: `https://proxy.example.com:8080`
+- **SOCKS5 proxies**: `socks5://proxy.example.com:1080`
+
+### Authentication
+
+Proxies requiring authentication can include credentials in the URL:
+
+```bash
+# HTTP proxy with authentication
+goscrape --proxy http://username:password@proxy.example.com:8080 http://website.com
+
+# SOCKS5 proxy with authentication
+goscrape --proxy socks5://user:pass@proxy.example.com:1080 http://website.com
 ```
