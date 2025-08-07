@@ -31,6 +31,7 @@ type Node struct {
 const (
 	BackgroundAttribute = "background"
 	HrefAttribute       = "href"
+	StyleAttribute      = "style"
 
 	DataSrcAttribute = "data-src"
 	SrcAttribute     = "src"
@@ -52,20 +53,24 @@ const (
 // Nodes describes the HTML tags and their attributes that can contain URL.
 var Nodes = map[string]Node{
 	ATag: {
-		Attributes: []string{HrefAttribute},
+		Attributes: []string{HrefAttribute, StyleAttribute},
+		parser:     styleAttributeParser,
 	},
 	BodyTag: {
-		Attributes: []string{BackgroundAttribute},
+		Attributes: []string{BackgroundAttribute, StyleAttribute},
+		parser:     styleAttributeParser,
 	},
 	ImgTag: {
-		Attributes: []string{SrcAttribute, DataSrcAttribute, SrcSetAttribute, DataSrcSetAttribute},
-		parser:     srcSetValueSplitter,
+		Attributes: []string{SrcAttribute, DataSrcAttribute, SrcSetAttribute, DataSrcSetAttribute, StyleAttribute},
+		parser:     combineAttributeParsers(srcSetValueSplitter, styleAttributeParser),
 	},
 	LinkTag: {
-		Attributes: []string{HrefAttribute},
+		Attributes: []string{HrefAttribute, StyleAttribute},
+		parser:     styleAttributeParser,
 	},
 	ScriptTag: {
-		Attributes: []string{SrcAttribute},
+		Attributes: []string{SrcAttribute, StyleAttribute},
+		parser:     styleAttributeParser,
 	},
 	StyleTag: {
 		noChildParsing: true,

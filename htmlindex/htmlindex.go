@@ -188,3 +188,45 @@ func styleParser(data nodeAttributeParserData) ([]string, bool) {
 
 	return urls, true
 }
+
+// styleAttributeParser returns the URL values from CSS content in a style attribute.
+func styleAttributeParser(data nodeAttributeParserData) ([]string, bool) {
+	if data.attribute != "style" {
+		return nil, false
+	}
+
+	if data.value == "" {
+		return nil, true
+	}
+
+	var urls []string
+	processor := func(_ *css.Token, _ string, url *url.URL) {
+		urls = append(urls, url.String())
+	}
+
+	css.Process(data.logger, data.url, data.value, processor)
+
+	return urls, true
+}
+
+// combineAttributeParsers combines multiple attribute parsers into a single parser.
+func combineAttributeParsers(parsers ...nodeAttributeParser) nodeAttributeParser {
+	return func(data nodeAttributeParserData) ([]string, bool) {
+		var allUrls []string
+		var handled bool
+
+		for _, parser := range parsers {
+			if parser == nil {
+				continue
+			}
+
+			urls, parserHandled := parser(data)
+			if parserHandled {
+				allUrls = append(allUrls, urls...)
+				handled = true
+			}
+		}
+
+		return allUrls, handled
+	}
+}

@@ -94,6 +94,8 @@ func (s *Scraper) fixNodeURL(baseURL *url.URL, attributes []string, node *html.N
 
 		if _, isSrcSet := htmlindex.SrcSetAttributes[attr.Key]; isSrcSet {
 			adjusted = resolveSrcSetURLs(baseURL, value, s.URL.Host, isHyperlink, relativeToRoot)
+		} else if attr.Key == "style" {
+			adjusted = s.fixCSSStyleAttribute(baseURL, value, isHyperlink, relativeToRoot)
 		} else {
 			adjusted = resolveURL(baseURL, value, s.URL.Host, isHyperlink, relativeToRoot)
 		}
@@ -176,4 +178,29 @@ func replaceCSSUrls(before, after, content string) string {
 	}
 
 	return content
+}
+
+// fixCSSStyleAttribute fixes the URL references in a CSS style attribute to point to relative file names.
+// It returns the adjusted CSS content.
+func (s *Scraper) fixCSSStyleAttribute(baseURL *url.URL, cssContent string, isHyperlink bool, relativeToRoot string) string {
+	urls := map[string]string{}
+
+	processor := func(_ *css.Token, before string, _ *url.URL) {
+		adjusted := resolveURL(baseURL, before, s.URL.Host, isHyperlink, relativeToRoot)
+		if before != adjusted {
+			urls[before] = adjusted
+		}
+	}
+
+	css.Process(s.logger, baseURL, cssContent, processor)
+
+	adjustedContent := cssContent
+	for before, filePath := range urls {
+		adjustedContent = replaceCSSUrls(before, filePath, adjustedContent)
+		s.logger.Debug("CSS style attribute relinked",
+			log.String("url", before),
+			log.String("fixed_url", filePath))
+	}
+
+	return adjustedContent
 }

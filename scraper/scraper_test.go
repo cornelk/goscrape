@@ -192,3 +192,67 @@ h3 {
 	assert.Contains(t, content, "url('"+file2Reference+"')")
 	assert.Contains(t, content, "url("+file3Reference+")")
 }
+
+func TestScraperStyleAttributes(t *testing.T) {
+	indexPage := []byte(`
+<html>
+<head>
+</head>
+<body style="background-image: url('https://example.org/body-bg.jpg');">
+<img src="regular.jpg" style="border: 1px solid url('/img-border.png');" />
+<a href="page2.html" style="background: url(link-bg.gif) no-repeat;">Link</a>
+<body>
+</html>
+`)
+	empty := []byte(``)
+
+	domain := "example.org"
+	bodyBgFile := "body-bg.jpg"
+	imgBorderFile := "img-border.png"
+	linkBgFile := "link-bg.gif"
+	regularImgFile := "regular.jpg"
+	linkFile := "page2.html"
+	fullURL := "https://" + domain
+
+	urls := map[string][]byte{
+		fullURL + "/":                  indexPage,
+		fullURL + "/" + bodyBgFile:     empty,
+		fullURL + "/" + imgBorderFile:  empty,
+		fullURL + "/" + linkBgFile:     empty,
+		fullURL + "/" + regularImgFile: empty,
+		fullURL + "/" + linkFile:       indexPage, // reuse indexPage for simplicity
+	}
+
+	scraper := newTestScraper(t, fullURL+"/", urls)
+	require.NotNil(t, scraper)
+
+	files := map[string][]byte{}
+	scraper.fileWriter = func(filePath string, data []byte) error {
+		files[filePath] = data
+		return nil
+	}
+
+	ctx := context.Background()
+	err := scraper.Start(ctx)
+	require.NoError(t, err)
+
+	expectedProcessed := map[string]struct{}{
+		"/":                  {},
+		"/" + bodyBgFile:     {},
+		"/" + imgBorderFile:  {},
+		"/" + linkBgFile:     {},
+		"/" + regularImgFile: {},
+		"/" + linkFile:       {},
+	}
+	require.Equal(t, expectedProcessed, scraper.processed)
+
+	// Check that the HTML content has been properly relinked
+	ref := domain + "/index.html"
+	content := string(files[ref])
+
+	// Verify the style attribute URLs have been relinked to relative paths
+	// Note: HTML encoding will turn single quotes into &#39;
+	assert.Contains(t, content, "url(&#39;"+bodyBgFile+"&#39;)")
+	assert.Contains(t, content, "url(&#39;"+imgBorderFile+"&#39;)")
+	assert.Contains(t, content, "url("+linkBgFile+")")
+}
