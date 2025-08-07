@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/cornelk/gotokit/log"
+	"github.com/cornelk/gotokit/set"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -85,12 +86,12 @@ func TestScraperLinks(t *testing.T) {
 	err := scraper.Start(ctx)
 	require.NoError(t, err)
 
-	expectedProcessed := map[string]struct{}{
-		"/":          {},
-		"/page2":     {},
-		"/sub/":      {},
-		"/style.css": {},
-	}
+	expectedProcessed := set.NewFromSlice([]string{
+		"/",
+		"/page2",
+		"/sub/",
+		"/style.css",
+	})
 	assert.Equal(t, expectedProcessed, scraper.processed)
 }
 
@@ -123,10 +124,10 @@ func TestScraperAttributes(t *testing.T) {
 	err := scraper.Start(ctx)
 	require.NoError(t, err)
 
-	expectedProcessed := map[string]struct{}{
-		"/":       {},
-		"/bg.gif": {},
-	}
+	expectedProcessed := set.NewFromSlice([]string{
+		"/",
+		"/bg.gif",
+	})
 	assert.Equal(t, expectedProcessed, scraper.processed)
 }
 
@@ -178,12 +179,12 @@ h3 {
 	err := scraper.Start(ctx)
 	require.NoError(t, err)
 
-	expectedProcessed := map[string]struct{}{
-		"/":                  {},
-		"/" + file1Reference: {},
-		"/" + file2Reference: {},
-		"/" + file3Reference: {},
-	}
+	expectedProcessed := set.NewFromSlice([]string{
+		"/",
+		"/" + file1Reference,
+		"/" + file2Reference,
+		"/" + file3Reference,
+	})
 	require.Equal(t, expectedProcessed, scraper.processed)
 
 	ref := domain + "/index.html"

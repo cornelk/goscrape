@@ -4,6 +4,7 @@ import (
 	"net/url"
 
 	"github.com/cornelk/gotokit/log"
+	"github.com/cornelk/gotokit/set"
 	"golang.org/x/net/html"
 )
 
@@ -74,7 +75,7 @@ var Nodes = map[string]Node{
 }
 
 // SrcSetAttributes contains the attributes that contain srcset values.
-var SrcSetAttributes = map[string]struct{}{
-	DataSrcSetAttribute: {},
-	SrcSetAttribute:     {},
-}
+var SrcSetAttributes = set.NewFromSlice([]string{
+	DataSrcSetAttribute,
+	SrcSetAttribute,
+})

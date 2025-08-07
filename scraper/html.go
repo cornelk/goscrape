@@ -92,7 +92,7 @@ func (s *Scraper) fixNodeURL(baseURL *url.URL, attributes []string, node *html.N
 
 		var adjusted string
 
-		if _, isSrcSet := htmlindex.SrcSetAttributes[attr.Key]; isSrcSet {
+		if htmlindex.SrcSetAttributes.Contains(attr.Key) {
 			adjusted = resolveSrcSetURLs(baseURL, value, s.URL.Host, isHyperlink, relativeToRoot)
 		} else {
 			adjusted = resolveURL(baseURL, value, s.URL.Host, isHyperlink, relativeToRoot)

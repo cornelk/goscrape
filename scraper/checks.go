@@ -22,14 +22,14 @@ func (s *Scraper) shouldURLBeDownloaded(url *url.URL, currentDepth uint, isAsset
 		p = "/"
 	}
 
-	if _, ok := s.processed[p]; ok { // was already downloaded or checked?
+	if s.processed.Contains(p) { // was already downloaded or checked?
 		if url.Fragment != "" {
 			return false
 		}
 		return false
 	}
 
-	s.processed[p] = struct{}{}
+	s.processed.Add(p)
 
 	if !isAsset {
 		if url.Host != s.URL.Host {
