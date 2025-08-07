@@ -3,9 +3,23 @@ package scraper
 
 import (
 	"net/url"
+	"strings"
 
 	"github.com/cornelk/gotokit/log"
 )
+
+// normalizeURLPath removes trailing slashes from URL paths for duplicate detection.
+// This treats URLs with and without trailing slashes as the same resource.
+func normalizeURLPath(path string) string {
+	if path == "" {
+		return "/"
+	}
+	// Keep root path as is, but remove trailing slashes from other paths
+	if path != "/" && strings.HasSuffix(path, "/") {
+		return strings.TrimSuffix(path, "/")
+	}
+	return path
+}
 
 // shouldURLBeDownloaded checks whether a page should be downloaded.
 // nolint: cyclop
@@ -22,14 +36,17 @@ func (s *Scraper) shouldURLBeDownloaded(url *url.URL, currentDepth uint, isAsset
 		p = "/"
 	}
 
-	if _, ok := s.processed[p]; ok { // was already downloaded or checked?
+	// Normalize the path for duplicate detection to handle trailing slashes
+	normalizedPath := normalizeURLPath(p)
+
+	if s.processed.Contains(normalizedPath) { // was already downloaded or checked?
 		if url.Fragment != "" {
 			return false
 		}
 		return false
 	}
 
-	s.processed[p] = struct{}{}
+	s.processed.Add(normalizedPath)
 
 	if !isAsset {
 		if url.Host != s.URL.Host {

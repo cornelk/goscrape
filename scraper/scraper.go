@@ -15,6 +15,7 @@ import (
 	"github.com/cornelk/goscrape/htmlindex"
 	"github.com/cornelk/gotokit/httpclient"
 	"github.com/cornelk/gotokit/log"
+	"github.com/cornelk/gotokit/set"
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
 	"golang.org/x/net/html"
@@ -61,7 +62,7 @@ type Scraper struct {
 	excludes []*regexp.Regexp
 
 	// key is the URL of page or asset
-	processed map[string]struct{}
+	processed set.Set[string]
 
 	imagesQueue       []*url.URL
 	webPageQueue      []*url.URL
@@ -130,7 +131,7 @@ func New(logger *log.Logger, cfg Config) (*Scraper, error) {
 		includes: includes,
 		excludes: excludes,
 
-		processed: map[string]struct{}{},
+		processed: set.New[string](),
 
 		webPageQueueDepth: map[string]uint{},
 	}
