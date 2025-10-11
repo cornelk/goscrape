@@ -237,14 +237,14 @@ func TestScraperStyleAttributes(t *testing.T) {
 	err := scraper.Start(ctx)
 	require.NoError(t, err)
 
-	expectedProcessed := map[string]struct{}{
-		"/":                  {},
-		"/" + bodyBgFile:     {},
-		"/" + imgBorderFile:  {},
-		"/" + linkBgFile:     {},
-		"/" + regularImgFile: {},
-		"/" + linkFile:       {},
-	}
+	expectedProcessed := set.NewFromSlice([]string{
+		"/",
+		"/" + bodyBgFile,
+		"/" + imgBorderFile,
+		"/" + linkBgFile,
+		"/" + regularImgFile,
+		"/" + linkFile,
+	})
 	require.Equal(t, expectedProcessed, scraper.processed)
 
 	// Check that the HTML content has been properly relinked

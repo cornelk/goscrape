@@ -92,11 +92,12 @@ func (s *Scraper) fixNodeURL(baseURL *url.URL, attributes []string, node *html.N
 
 		var adjusted string
 
-		if htmlindex.SrcSetAttributes.Contains(attr.Key) {
+		switch {
+		case htmlindex.SrcSetAttributes.Contains(attr.Key):
 			adjusted = resolveSrcSetURLs(baseURL, value, s.URL.Host, isHyperlink, relativeToRoot)
-		} else if attr.Key == "style" {
+		case attr.Key == "style":
 			adjusted = s.fixCSSStyleAttribute(baseURL, value, isHyperlink, relativeToRoot)
-		} else {
+		default:
 			adjusted = resolveURL(baseURL, value, s.URL.Host, isHyperlink, relativeToRoot)
 		}
 
