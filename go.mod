@@ -4,11 +4,11 @@ go 1.24.0
 
 require (
 	github.com/alexflint/go-arg v1.6.0
-	github.com/cornelk/gotokit v0.0.0-20250807045503-05a12c6a4a76
+	github.com/cornelk/gotokit v0.0.0-20251031201833-083458d3990b
 	github.com/gorilla/css v1.0.1
 	github.com/h2non/filetype v1.1.4-0.20231228185113-6469358c2bcb
-	github.com/stretchr/testify v1.10.0
-	golang.org/x/net v0.42.0
+	github.com/stretchr/testify v1.11.1
+	golang.org/x/net v0.46.0
 )
 
 require (

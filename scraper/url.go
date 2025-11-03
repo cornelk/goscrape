@@ -65,14 +65,16 @@ func resolveURL(base *url.URL, reference, mainPageHost string, isHyperlink bool,
 }
 
 func urlRelativeToRoot(url *url.URL) string {
-	var rel string
+	var rel strings.Builder
 	splits := strings.Split(url.Path, "/")
+
 	for i := range splits {
 		if (len(splits[i]) > 0) && (i < len(splits)-1) {
-			rel += "../"
+			rel.WriteString("../")
 		}
 	}
-	return rel
+
+	return rel.String()
 }
 
 func urlRelativeToOther(src, base *url.URL) string {
@@ -97,7 +99,8 @@ func urlRelativeToOther(src, base *url.URL) string {
 		}
 	}
 
-	var upLevels string
+	var upLevels strings.Builder
+
 	for i, split := range baseSplits {
 		if split == "" {
 			continue
@@ -106,8 +109,8 @@ func urlRelativeToOther(src, base *url.URL) string {
 		if i == len(baseSplits)-1 {
 			break
 		}
-		upLevels += "../"
+		upLevels.WriteString("../")
 	}
 
-	return upLevels + path.Join(srcSplits...)
+	return upLevels.String() + path.Join(srcSplits...)
 }
